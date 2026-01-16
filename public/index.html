@@ -1,1 +1,757 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset='UTF-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link rel="stylesheet" href="style.css">
+        <link rel="icon" type="image/png" href="Images/main_logo.png">
+        <title>Schedule</title>
+    </head>
+    <body>
+        <script src="app.js"></script>
+        <!-- Custom Notifications -->
+        <div id="notificationContainer"></div>
 
+        <div class="modal-overlay-log">
+                <div class="modal">
+                    <span class="close-btn">✕</span>
+                <h2>Увійти в акаунт</h2>
+                    <a class="google-btn" href="">
+                    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png" width="20" id="continueGoogle">
+                    Продовжити з Google
+                    </a>
+                <div class="divider" id="ort-log">або</div>
+
+                <input type="email" class="email-input" id="loginEmail" placeholder="ЕЛЕКТРОННА ПОШТА">
+                <input type="password" class="email-input" id="loginPassword" placeholder="ПАРОЛЬ">
+
+                <button class="email-btn" id="loginButton">
+                    <span class="arrow">→</span>
+                    <span class="txt">Увійти</span>
+                </button>
+                <p class="dop-links"><a href="" id="resetPasswordLink">Забули пароль?</a></p>
+                <p class="dop-links">
+                    <span class="pre-link-text-log">Немає акаунту? </span>
+                    <a href="" id="switchToRegister">Створити акаунт</a>
+                </p>
+                </div>
+            </div>
+
+            <div class="modal-overlay-start">
+                <div class="modal">
+                    <span class="close-btn">✕</span>
+                <h2>Створити акаунт</h2>
+                    <a class="google-btn" href="">
+                    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png" width="20" id="continueGoogle">
+                    Продовжити з Google
+                    </a>
+                <div class="divider" id="ort-reg">або</div>
+
+                <input type="email" class="email-input" id="regEmail" placeholder="ЕЛЕКТРОННА ПОШТА">
+                <input type="password" class="email-input" id="regPassword" placeholder="ПАРОЛЬ">
+                <input type="password" class="email-input" id="regConfirmPassword" placeholder="ПІДТВЕРДІТЬ ПАРОЛЬ">
+
+                <button class="email-btn" id="registerButton">
+                    <span class="arrow">→</span>
+                    <span class="txt">Зареєструватися</span>
+                </button>
+                <p class="dop-links">
+                    <span class="pre-link-text-start">Вже є акаунт? </span>
+                    <a href="" id="switchToLogin">Увійти</a>
+                </p>
+                </div>
+            </div>
+
+            <div class="reset-password">
+                <div class="modal">
+                    <span class="close-btn">✕</span>
+                <h2>Скинути пароль</h2>
+
+                <input type="email" class="email-input" id="resetEmail" placeholder="ЕЛЕКТРОННА ПОШТА">
+
+                <button class="email-btn" id="resetPasswordButton">
+                    <span class="arrow">→</span>
+                <span class="txt" id="resetPas">Скинути пароль</span>
+                    </button>
+                <p class="dop-links">
+                    <a href="" id="cancelReset">Скасувати</a>
+                </p>
+                </div>
+            </div>
+
+            <div class="modal-overlay-date-task" id="modalDateTask">
+                <div class="modal">
+                    <span class="close-btn" id="closeDateTaskModal">✕</span>
+                    <h2 id="dateTaskModalTitle">Додати план</h2>
+                    
+                    <div class="date-display" id="dateTaskDisplay">
+                        <span class="date-icon">📅</span>
+                        <span id="selectedDateDisplay">Дата не вибрана</span>
+                    </div>
+
+                    <input type="text" class="email-input" id="taskTitleInput" placeholder="НАЗВА ЗАВДАННЯ">
+                    <textarea class="email-input task-description" id="taskDescriptionInput" placeholder="ОПИС (необов'язково)" rows="3"></textarea>
+
+                    <div class="task-options">
+                        <label class="option-label">Пріоритет:</label>
+                        <div class="priority-select">
+                            <button class="priority-option" data-priority="none">
+                                <img src="priority_icon.png"> Без пріоритету
+                            </button>
+                            <button class="priority-option" data-priority="urgent">
+                                <img src="urgent_icon.png"> Терміново
+                            </button>
+                            <button class="priority-option" data-priority="high">
+                                <img src="high_icon.png"> Високий
+                            </button>
+                            <button class="priority-option" data-priority="normal">
+                                <img src="normal_icon.png"> Звичайний
+                            </button>
+                            <button class="priority-option" data-priority="low">
+                                <img src="low_icon.png"> Низький
+                            </button>
+                        </div>
+                    </div>
+
+                    <button class="email-btn" id="saveDateTaskBtn">
+                        <span class="arrow">→</span>
+                        <span class="txt">Зберегти</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-overlay-profile" id="modalProfile">
+                <div class="modal profile-modal dark-modal">
+                    <span class="close-btn dark-close" id="closeProfileModal">✕</span>
+                    <h2 class="dark-title">Мій профіль</h2>
+                    
+                    <div class="profile-header">
+                        <div class="profile-avatar-large" id="profileAvatarLarge">
+                            <span class="profile-letter" id="profileLetter"></span>
+                        </div>
+                        <div class="profile-info">
+                            <h3 class="profile-name" id="profileName">Username</h3>
+                            <p class="profile-email" id="profileEmail">email@example.com</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <div class="profile-stat-value" id="profileTotalTasks">0</div>
+                            <div class="profile-stat-label">Всього завдань</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value" id="profileCompletedTasks">0</div>
+                            <div class="profile-stat-label">Виконано</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value" id="profileProductivity">0%</div>
+                            <div class="profile-stat-label">Продуктивність</div>
+                        </div>
+                    </div>
+
+                    <div class="profile-section">
+                        <label class="profile-label">Ім'я профілю</label>
+                        <input type="text" class="email-input dark-input" id="profileNameInput" placeholder="Введіть ім'я">
+                    </div>
+
+                    <div class="profile-section">
+                        <label class="profile-label">Дата реєстрації</label>
+                        <div class="profile-readonly" id="profileRegistered">—</div>
+                    </div>
+
+                    <div class="profile-section">
+                        <label class="profile-label">Мова інтерфейсу</label>
+                        <div class="language-dropdown">
+                            <button class="language-dropdown-btn" id="languageDropdownBtn">
+                                <span class="selected-lang-flag" id="selectedLangFlag">🇺🇦</span>
+                                <span class="selected-lang-name" id="selectedLangName">Українська</span>
+                                <span class="dropdown-arrow">▼</span>
+                            </button>
+                            <div class="language-dropdown-menu" id="languageDropdownMenu">
+                                <div class="language-option" data-lang="uk">
+                                    <span class="lang-flag">🇺🇦</span>
+                                    <span class="lang-name">Українська</span>
+                                </div>
+                                <div class="language-option" data-lang="en">
+                                    <span class="lang-flag">🇬🇧</span>
+                                    <span class="lang-name">English</span>
+                                </div>
+                                <div class="language-option" data-lang="ru">
+                                    <span class="lang-flag">🇷🇺</span>
+                                    <span class="lang-name">Русский</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-actions">
+                        <button class="profile-btn save-btn" id="saveProfileBtn">
+                            <span class="arrow">→</span>
+                            <span class="txt">Зберегти зміни</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+        <div id="landingPage" class="homepage">
+            <div class="home-header">
+                <div class="left">
+                    <a class="logo" href="/index">
+                        <img src="main_logo.png" alt="logo">
+                    </a>
+                    <nav>
+                        <a href="#" id="products">Products</a>
+                        <a href="#" id="solutions">Solutions</a>
+                        <a href="#" id="community">Community</a>
+                        <a href="#" id="resources">Resources</a>
+                        <a href="/about" id="about">About</a>
+                    </nav>
+                </div>
+                <div class="right">
+                    <div class="auth-buttons" id="authButtons">
+                        <a class="login">Log in</a>
+                        <button class="btn-start">
+                            <span class="arrow">→</span>
+                            <span class="text">Get started for free</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-section">
+                <div class="hero-content">
+                    <h1 class="hero-title">Your ideas. Your actions.</h1>
+                    <p class="hero-subtitle">The planner helps you organize your work, manage projects, and collaborate with your team.</p>
+                    <button class="hero-btn">
+                        <span class="arrow">→</span>
+                        <span class="text">Get started for free</span>
+                    </button>
+            </div>
+
+                <div class="decorative-shapes">
+                    <div class="shape shape-1"></div>
+                    <div class="shape shape-2"></div>
+                    <div class="shape shape-3"></div>
+                    <div class="shape shape-4"></div>
+                    <div class="shape shape-5"></div>
+                    <div class="shape shape-6"></div>
+                    <div class="shape shape-7"></div>
+                    <div class="shape shape-8"></div>
+                </div>
+            </div>
+
+        <footer class="footer">
+            <div class="footer-inner">
+                <div class="footer-left">
+
+                    <h2 class="footer-title">
+                        Start simple.<br>Write your first task.
+                    </h2>
+
+                    <button class="footer-btn">
+                        <span class="arrow">→</span>
+                        <span class="text">Explore all templates</span>
+                    </button>
+
+                    <div class="social-icons">
+                        <a href="#" class="social-btn"><img src="x_logo.avif"></a>
+                        <a href="#" class="social-btn"><img src="y_logo.png"></a>
+                        <a href="#" class="social-btn"><img src="i_logo.png"></a>
+                        <a href="#" class="social-btn"><img src="f_logo.png"></a>
+                    </div>
+
+                    <div class="language-selector">
+                        <button class="lang-btn">
+                            🌐 English <span class="arrow">▼</span>
+                        </button>
+
+                        <ul class="lang-dropdown">
+                                <li data-lang="en">English</li>
+                                <li data-lang="ua">Українська</li>
+                                <li data-lang="ru">Русский</li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <div class="footer-columns">
+                    <div class="footer-col">
+                        <h4>PRODUCT</h4>
+                        <a href="#">Design</a>
+                        <a href="#">Dev Mode</a>
+                        <a href="#">Slides</a>
+                    </div>
+
+                    <div class="footer-col">
+                        <h4>USE CASES</h4>
+                        <a href="#">Wireframing</a>
+                        <a href="#">Prototyping</a>
+                        <a href="#">Brainstorming</a>
+                    </div>
+
+                    <div class="footer-col">
+                        <h4>RESOURCES</h4>
+                        <a href="#">Blog</a>
+                        <a href="#">Templates</a>
+                        <a href="#">Developers</a>
+                        <a href="#">Help center</a>
+                    </div>
+
+                    <div class="footer-col">
+                        <h4>COMPANY</h4>
+                        <a href="#">Events</a>
+                        <a href="#">Careers</a>
+                        <a href="#">Status</a>
+                        <a href="#">Legal & privacy</a>
+                    </div>
+                </div>
+
+            </div>
+        </footer>
+        </div>
+
+        <div id="dashboardPage" class="schedule-main">
+            <div class="sidebar">
+
+                <div class="sidebar-top">
+                    <div class="sidebar-item active">
+                        <div class="icon glow">⌂</div>
+                        <span>Home</span>
+                    </div>
+
+                    <div class="sidebar-item">
+                        <div class="icon">🗓</div>
+                        <span>Planner</span>
+                    </div>
+
+                    <div class="sidebar-item">
+                        <div class="icon badge">
+                            ✦
+                            <span class="dot"></span>
+                        </div>
+                        <span>AI</span>
+                    </div>
+
+                    <div class="sidebar-item">
+                        <div class="icon">👥</div>
+                        <span>Teams</span>
+                    </div>
+
+                    <div class="sidebar-item">
+                        <div class="icon">⋮⋮</div>
+                        <span>More</span>
+                    </div>
+
+                </div>
+
+                <div class="sidebar-bottom">
+
+                    <div class="sidebar-item">
+                        <div class="icon">＋</div>
+                        <span>Invite</span>
+                    </div>
+
+                    <div class="sidebar-item upgrade">
+                        <div class="icon">⬆</div>
+                        <span>Upgrade</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="main-window">
+
+                <div class="topbar">
+                    <div class="breadcrumbs">
+                        Home
+                    </div>
+                    
+                    <div class="user-info" id="userInfo" style="display: none;">
+                        <div class="user-trigger" id="userTrigger">
+                            <div class="user-avatar" id="userAvatar">
+                                <span class="avatar-letter" id="avatarLetter"></span>
+                                <span class="avatar-status"></span>
+                            </div>
+                            <span class="avatar-arrow" id="avatarArrow">^</span>
+                        </div>
+
+                        <div class="user-menu" id="userMenu">
+                            <div class="menu-section">
+                                <button class="menu-item" id="openProfileBtn">
+                                    <span class="menu-icon"><img src="settings_icon.png" alt=""></span>
+                                    <span class="menu-text">Settings</span>
+                                </button>
+                            </div>
+
+                            <div class="menu-divider"></div>
+
+                            <div class="menu-section">
+                                <button class="menu-item logout-item" id="logoutBtn">
+                                    <span class="menu-icon"><img src="logout_icon.png" alt=""></span>
+                                    <span class="menu-text">Log out</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="view-tabs">
+                    <div class="view-tab active"><img src="list_icon.png"> List</div>
+                    <div class="view-tab"><img src="calendar_icon.png"> Calendar</div>
+                    <div class="view-tab"><img src="dashboard_icon.png"> Dashboard</div>
+                </div>
+
+                <div class="table-wrapper" id="listView">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th></th>
+                                <th>Due date</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Comments</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <tr class="group-row" data-status="DONE">
+                                <td colspan="7">
+                                <span class="group-badge">
+                                    <span class="group-dot dot-done"></span>
+                                    DONE
+                                </span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                <div class="name-cell">
+                                    <span class="task-status-dot dot-done type-task"></span>
+                                    Task 1
+                                </div>
+                                </td>
+                                <td class="icon-cell"><img src="date_icon.png"></td>
+                                <td class="icon-cell priority-btn" data-priority="none">
+                                    <img src="priority_icon.png">
+                                    <span class="priority-label"></span>
+                                </td>
+                                <td><span class="status done">DONE</span></td>
+                                <td class="icon-cell"><img src="comment_icon.png"></td>
+                                <td></td>
+                            </tr>
+
+                            <tr class="add-task-row" data-status="DONE">
+                                <td>
+                                    <button class="add-task-btn">+ Add task</button>
+                                </td>
+                                <td class="icon-cell"></td>
+                                <td class="icon-cell"></td>
+                                <td></td>
+                                <td class="icon-cell"></td>
+                                <td></td>
+                            </tr>
+
+                            <tr class="group-row" data-status="IN PROGRESS">
+                                <td colspan="7">
+                                <span class="group-badge">
+                                    <span class="group-dot dot-progress"></span>
+                                    IN PROGRESS
+                                </span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                <div class="name-cell">
+                                    <span class="task-status-dot dot-progress type-task"></span>
+                                    Task 2
+                                </div>
+                                </td>
+                                <td class="icon-cell"><img src="date_icon.png"></td>
+                                <td class="icon-cell priority-btn" data-priority="none">
+                                    <img src="priority_icon.png">
+                                    <span class="priority-label"></span>
+                                </td>
+                                <td><span class="status progress">IN PROGRESS</span></td>
+                                <td class="icon-cell"><img src="comment_icon.png"></td>
+                                <td></td>
+                            </tr>
+
+                            <tr class="add-task-row" data-status="IN PROGRESS">
+                                <td>
+                                    <button class="add-task-btn">+ Add task</button>
+                                </td>
+                                <td class="icon-cell"></td>
+                                <td class="icon-cell"></td>
+                                <td></td>
+                                <td class="icon-cell"></td>
+                                <td></td>
+                            </tr>
+
+                            <tr class="group-row" data-status="TO DO">
+                                <td colspan="7">
+                                <span class="group-badge">
+                                    <span class="group-dot dot-todo"></span>
+                                    TO DO
+                                </span>
+                                </td>
+                            </tr>
+
+                            <tr class="task-row">
+                                <td>
+                                <div class="name-cell">
+                                    <span class="task-status-dot dot-todo type-task"></span>
+                                    Task 3
+                                </div>
+                                </td>
+                                <td class="icon-cell"><img src="date_icon.png"></td>
+                                <td class="icon-cell priority-btn" data-priority="none">
+                                    <img src="priority_icon.png">
+                                    <span class="priority-label"></span>
+                                </td>
+                                <td><span class="status todo">TO DO</span></td>
+                                <td class="icon-cell"><img src="comment_icon.png"></td>
+                                <td></td>
+                            </tr>
+
+                            <tr class="add-task-row" data-status="TO DO">
+                                <td>
+                                    <button class="add-task-btn">+ Add task</button>
+                                </td>
+                                <td class="icon-cell"></td>
+                                <td class="icon-cell"></td>
+                                <td></td>
+                                <td class="icon-cell"></td>
+                                <td></td>
+                            </tr>
+
+                            </tbody>
+                    </table>
+                </div>
+
+                <div class="calendar-view" id="calendarView" style="display: none;">
+                    <div class="calendar-container">
+                        <div class="calendar-header">
+                            <button class="calendar-nav-btn" id="prevMonth">❮</button>
+                            <h2 class="calendar-title" id="calendarTitle">January 2026</h2>
+                            <button class="calendar-nav-btn" id="nextMonth">❯</button>
+                        </div>
+                        
+                        <div class="calendar-weekdays">
+                            <div class="weekday">Пн</div>
+                            <div class="weekday">Вт</div>
+                            <div class="weekday">Ср</div>
+                            <div class="weekday">Чт</div>
+                            <div class="weekday">Пт</div>
+                            <div class="weekday">Сб</div>
+                            <div class="weekday">Нд</div>
+                        </div>
+                        
+                        <div class="calendar-grid" id="calendarGrid">
+                        </div>
+                    </div>
+                    
+                    <div class="selected-date-tasks" id="selectedDateTasks">
+                        <div class="tasks-header">
+                            <h3 id="selectedDateTitle">Виберіть дату</h3>
+                            <button class="add-task-for-date-btn" id="addTaskForDateBtn" style="display: none;">
+                                + Додати план
+                            </button>
+                        </div>
+                        <div class="date-tasks-list" id="dateTasksList">
+                            <div class="empty-state">
+                                <div class="empty-icon">📅</div>
+                                <p>Виберіть дату, щоб побачити заплановані справи</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-view" id="boardView" style="display: none;">
+                    <div class="dashboard-container">
+                        <div class="dashboard-header">
+                            <h1>Огляд панелі</h1>
+                            <p class="dashboard-subtitle">Огляд ваших проєктів та завдань</p>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                    📋
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-value" id="totalTasks">0</h3>
+                                    <p class="stat-label">Всього завдань</p>
+                                </div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                    🔄
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-value" id="inProgressTasks">0</h3>
+                                    <p class="stat-label">У процесі</p>
+                                </div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                    ✅
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-value" id="completedTasks">0</h3>
+                                    <p class="stat-label">Завершено</p>
+                                </div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                    📈
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-value" id="productivity">0%</h3>
+                                    <p class="stat-label">Продуктивність</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="charts-row">
+                            <div class="chart-card">
+                                <h3 class="chart-title">Прогрес завдань</h3>
+                                <div class="progress-chart">
+                                    <div class="progress-bar-container">
+                                        <div class="progress-item">
+                                            <div class="progress-label">
+                                                <span>ЗРОБИТИ</span>
+                                                <span id="todoCount">0</span>
+                                            </div>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill todo-fill" id="todoBar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="progress-item">
+                                            <div class="progress-label">
+                                                <span>У ПРОЦЕСІ</span>
+                                                <span id="progressCount">0</span>
+                                            </div>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill progress-fill-bar" id="progressBar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="progress-item">
+                                            <div class="progress-label">
+                                                <span>ВИКОНАНО</span>
+                                                <span id="doneCount">0</span>
+                                            </div>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill done-fill" id="doneBar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="chart-card">
+                                <h3 class="chart-title">Пріоритети</h3>
+                                <div class="priority-chart">
+                                    <div class="priority-list">
+                                        <div class="priority-item">
+                                            <div class="priority-badge urgent">🔴 Терміново</div>
+                                            <div class="priority-count" id="urgentCount">0</div>
+                                        </div>
+                                        <div class="priority-item">
+                                            <div class="priority-badge high">🟡 Високий</div>
+                                            <div class="priority-count" id="highCount">0</div>
+                                        </div>
+                                        <div class="priority-item">
+                                            <div class="priority-badge medium">🔵 Звичайний</div>
+                                            <div class="priority-count" id="mediumCount">0</div>
+                                        </div>
+                                        <div class="priority-item">
+                                            <div class="priority-badge low">⚪ Низький</div>
+                                            <div class="priority-count" id="lowCount">0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="recent-activity">
+                            <h3 class="activity-title">Останні завдання</h3>
+                            <div class="activity-list" id="recentTasks">
+                                <div class="activity-item">
+                                    <div class="activity-icon">📝</div>
+                                    <div class="activity-content">
+                                        <p class="activity-text">Поки немає завдань. Створіть своє перше завдання!</p>
+                                        <span class="activity-time">Зараз</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="ai-assistant" id="aiAssistant" style="display: none;">
+                <div class="ai-header">
+                    <div class="ai-title">
+                        <span class="ai-icon">✦</span>
+                        <h2>AI Task Assistant</h2>
+                    </div>
+                    <p class="ai-subtitle">Допоможу розподілити завдання та спланувати ваш день</p>
+                </div>
+
+                <div class="ai-chat" id="aiChat">
+                    <div class="ai-message ai-message-bot">
+                        <div class="ai-avatar">🤖</div>
+                        <div class="ai-bubble">
+                            <p>Привіт! Я AI асистент для планування завдань. Я можу допомогти вам:</p>
+                            <ul>
+                                <li>📋 Проаналізувати ваші завдання</li>
+                                <li>⏰ Розподілити їх за часом</li>
+                                <li>🎯 Пріоритизувати важливі справи</li>
+                                <li>💡 Дати рекомендації щодо організації</li>
+                            </ul>
+                            <p>Напишіть "проаналізуй завдання" або задайте своє питання!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ai-input-container">
+                    <input 
+                        type="text" 
+                        id="aiInput" 
+                        class="ai-input" 
+                        placeholder="Напишіть повідомлення..."
+                    />
+                    <button id="aiSendBtn" class="ai-send-btn">
+                        <span>→</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="quickDatePicker" class="quick-date-picker" style="display: none;">
+            <div class="quick-calendar-header">
+                <button id="quickPrevMonth">❮</button>
+                <span id="quickMonthTitle"></span>
+                <button id="quickNextMonth">❯</button>
+            </div>
+            <div class="quick-calendar-grid-header">
+                <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Нд</span>
+            </div>
+            <div id="quickCalendarGrid" class="quick-calendar-grid"></div>
+        </div>
+    </body>
+</html>

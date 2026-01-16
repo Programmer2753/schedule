@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="main_logo.png">
+    <title>About Us</title>
+</head>
+<body id="aboutPage">
+    
+    <!-- Custom Notifications -->
+    <div id="notificationContainer"></div>
+
+    <div class="modal-overlay-log">
+        <div class="modal">
+            <span class="close-btn">✕</span>
+            <h2>Увійти в акаунт</h2>
+            <a class="google-btn" href="">
+            <img src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png" width="20" id="continueGoogle">
+            Продовжити з Google
+            </a>
+        <div class="divider" id="ort-log">або</div>
+
+        <input type="email" class="email-input" id="loginEmail" placeholder="ЕЛЕКТРОННА ПОШТА">
+        <input type="password" class="email-input" id="loginPassword" placeholder="ПАРОЛЬ">
+
+        <button class="email-btn" id="loginButton">
+            <span class="arrow">→</span>
+            <span class="txt">Увійти</span>
+        </button>
+        <p class="dop-links"><a href="" id="resetPasswordLink">Забули пароль?</a></p>
+        <p class="dop-links">
+            <span class="pre-link-text-log">Немає акаунту? </span>
+            <a href="/index" id="switchToRegister">Створити акаунт</a>
+        </p>
+        </div>
+    </div>
+
+    <div class="modal-overlay-start">
+        <div class="modal">
+            <span class="close-btn">✕</span>
+            <h2>Створити акаунт</h2>
+            <a class="google-btn" href="">
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png" width="20" id="continueGoogle">
+                Продовжити з Google
+             </a>
+            <div class="divider" id="ort-reg">або</div>
+
+            <input type="email" class="email-input" id="regEmail" placeholder="ЕЛЕКТРОННА ПОШТА">
+            <input type="password" class="email-input" id="regPassword" placeholder="ПАРОЛЬ">
+            <input type="password" class="email-input" id="regConfirmPassword" placeholder="ПІДТВЕРДІТЬ ПАРОЛЬ">
+
+            <button class="email-btn" id="registerButton">
+                <span class="arrow">→</span>
+            <span class="txt">Зареєструватися</span>
+                </button>
+            <p class="dop-links">
+                <span class="pre-link-text-start">Вже є акаунт? </span>
+                <a href="/index" id="switchToLogin">Увійти</a>
+            </p>
+        </div>
+    </div>
+
+    <div class="reset-password">
+        <div class="modal">
+            <span class="close-btn">✕</span>
+            <h2>Скинути пароль</h2>
+
+            <input type="email" class="email-input" id="resetEmail" placeholder="ЕЛЕКТРОННА ПОШТА">
+
+            <button class="email-btn" id="resetPasswordButton">
+                <span class="arrow">→</span>
+            <span class="txt" id="resetPas">Скинути пароль</span>
+            </button>
+            <p class="dop-links">
+                <a href="" id="cancelReset">Скасувати</a>
+            </p>
+        </div>
+    </div>
+
+    <div class="home-header">
+        <div class="left">
+            <a class="logo" href="/index">
+                <img src="main_logo.png" alt="logo">
+            </a>
+            <nav>
+                <a href="#" id="products">Products</a>
+                <a href="#" id="solutions">Solutions</a>
+                <a href="#" id="community">Community</a>
+                <a href="#" id="resources">Resources</a>
+                <a href="/about" id="about">About</a>
+            </nav>
+        </div>
+        <div class="right">
+            <div class="auth-buttons" id="authButtons">
+                <a class="login">Log in</a>
+                <button class="btn-start">
+                    <span class="arrow">→</span>
+                    <span class="text">Get started for free</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <section class="about-hero">
+        <h1 class="about-title">Our mission.</h1>
+
+        <div class="about-scene">
+            <div class="about-mountain-wrapper">
+                <img src="mountain1.png" class="about-mountain-img" alt="Mountain">
+                
+                <div class="about-flag-container">
+                    <div class="about-flag-pole"></div>
+                    <div class="about-flag-cloth">
+                        <img src="main_logo.png" alt="" style="height: 18px;">
+                        <span style="font-weight:700; font-size:18px; color:#333;">Schedule</span>
+                    </div>
+                </div>
+
+                <div class="clouds-cluster">
+                    <img src="cloud2.png" class="cloud">
+                    <img src="cloud2.png" class="cloud">
+                    <img src="cloud2.png" class="cloud">
+                    <img src="cloud2.png" class="cloud">
+                    <img src="cloud2.png" class="cloud">
+                    <img src="cloud2.png" class="cloud">
+                    <img src="cloud2.png" class="cloud">
+                    <img src="cloud2.png" class="cloud">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="intro-section">
+        <div class="intro-text-wrapper">
+        <h2>Save people time by making the world more productive.</h2>
+        <p>
+            While we absolutely love productivity software, we believe productivity, in general, is broken. 
+            There's just too many tools to keep track of, too many things in entirely separate ecosystems. 
+            There has to be a better way to work.
+            While we absolutely love productivity software, we believe productivity, in general, is broken. 
+            There's just too many tools to keep track of, too many things in entirely separate ecosystems. 
+            There has to be a better way to work - that's why we created Schedule, first an internal tool, 
+            now as a way to fulfill our vision of making the world more productive.
+        </p>
+        <br>
+        <p>
+            Eventually, our goal is to have all work live in Schedule - thereby making people more productive 
+            and giving back at least 20% of time to dedicate to other things. One app to replace them all. 
+            We are just getting started and are very grateful to everyone who is working with our team.
+        </p>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-left">
+
+                <h2 class="footer-title">
+                    Start simple.<br>Write your first task.
+                </h2>
+
+                <button class="footer-btn">
+                    <span class="arrow">→</span>
+                    <span class="text">Explore all templates</span>
+                </button>
+
+                <div class="social-icons">
+                    <a href="#" class="social-btn"><img src="x_logo.avif"></a>
+                    <a href="#" class="social-btn"><img src="y_logo.png"></a>
+                    <a href="#" class="social-btn"><img src="i_logo.png"></a>
+                    <a href="#" class="social-btn"><img src="f_logo.png"></a>
+                </div>
+
+                <div class="language-selector">
+                    <button class="lang-btn">
+                        🌐 English <span class="arrow">▼</span>
+                    </button>
+
+                    <ul class="lang-dropdown">
+                            <li data-lang="en">English</li>
+                            <li data-lang="ua">Українська</li>
+                            <li data-lang="ru">Русский</li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <div class="footer-columns">
+                <div class="footer-col">
+                    <h4>PRODUCT</h4>
+                    <a href="#">Design</a>
+                    <a href="#">Dev Mode</a>
+                    <a href="#">Slides</a>
+                </div>
+
+                <div class="footer-col">
+                    <h4>USE CASES</h4>
+                    <a href="#">Wireframing</a>
+                    <a href="#">Prototyping</a>
+                    <a href="#">Brainstorming</a>
+                </div>
+
+                <div class="footer-col">
+                    <h4>RESOURCES</h4>
+                    <a href="#">Blog</a>
+                    <a href="#">Templates</a>
+                    <a href="#">Developers</a>
+                    <a href="#">Help center</a>
+                </div>
+
+                <div class="footer-col">
+                    <h4>COMPANY</h4>
+                    <a href="#">Events</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Status</a>
+                    <a href="#">Legal & privacy</a>
+                </div>
+            </div>
+
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
