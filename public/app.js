@@ -1246,7 +1246,7 @@ function applyLang(lang) {
     }
   }
 
-  function createDayElement(day, className, year, month, tasks) {
+  function createDayElement(day, className, year, month) {
     const dayEl = document.createElement('div');
     dayEl.className = `calendar-day ${className}`;
     dayEl.textContent = day;
@@ -1263,9 +1263,7 @@ function applyLang(lang) {
       dayEl.classList.add('selected');
     }
 
-    // Передаем список задач в функцию фильтрации
-    const tasksForDate = getTasksForDate(dateStr, tasks);
-    
+    const tasksForDate = getTasksForDate(dateStr);
     if (tasksForDate.length > 0 && className === 'current-month') {
       const badge = document.createElement('div');
       badge.className = 'task-count-badge';
@@ -1297,8 +1295,7 @@ function applyLang(lang) {
     return `${year}-${month}-${day}`;
   }
 
-  // Теперь функция асинхронная
-  async function selectDate(dateStr) {
+  function selectDate(dateStr) {
     selectedDate = dateStr;
       
     document.querySelectorAll('.calendar-day').forEach(day => day.classList.remove('selected'));
@@ -1306,40 +1303,25 @@ function applyLang(lang) {
     if (selectedDay) selectedDay.classList.add('selected');
 
     if (activeTaskIdForDate) {
-        // Ждем обновления задачи
-        await updateTask(activeTaskIdForDate, { date: dateStr });
+        updateTask(activeTaskIdForDate, { date: dateStr });
           
         console.log(`Task ${activeTaskIdForDate} updated with date ${dateStr}`);
           
         document.getElementById('calendarPopup').style.display = 'none';
         activeTaskIdForDate = null;
-        
-        // Перерисовываем календарь, чтобы обновились точки
-        renderCalendar();
     }
 
-    // Вызываем отображение (оно тоже теперь async)
-    await displayTasksForDate(dateStr);
+    displayTasksForDate(dateStr);
   }
 
-  // Исправлена логика сравнения дат (MySQL vs JS)
-  function getTasksForDate(dateStr, tasksList) {
-    // Если список задач не передан, пытаемся получить его (но лучше передавать)
-    if (!tasksList) {
-       // Этот блок сработает только в крайнем случае, если tasksList не передан
-       return []; 
-    }
+  function getTasksForDate(dateStr) {
+    const user = getCurrentUserData();
+    if (!user || !user.tasks) return [];
       
-    return tasksList.filter(task => {
-        if (!task.date) return false;
-        // ВАЖНО: База возвращает 2024-01-20T00:00:00.000Z. Берем только часть до T.
-        const taskDateShort = task.date.toString().split('T')[0];
-        return taskDateShort === dateStr;
-    });
+    return user.tasks.filter(task => task.date === dateStr);
   }
 
-  // Теперь функция асинхронная, сама грузит свежие данные
-  async function displayTasksForDate(dateStr) {
+  function displayTasksForDate(dateStr) {
     const selectedDateTitle = document.getElementById('selectedDateTitle');
     const dateTasksList = document.getElementById('dateTasksList');
     const addTaskForDateBtn = document.getElementById('addTaskForDateBtn');
@@ -1356,12 +1338,7 @@ function applyLang(lang) {
     addTaskForDateBtn.style.display = 'flex';
     addTaskForDateBtn.innerHTML = `<span style="font-size: 20px; margin-right: 4px;">+</span> ${t.calendar?.addTaskBtn || '+ Add task'}`;
 
-    // 1. Грузим свежие данные пользователя
-    const user = await getCurrentUserData();
-    const allTasks = user ? user.tasks : [];
-
-    // 2. Фильтруем с помощью исправленной функции
-    const tasks = getTasksForDate(dateStr, allTasks);
+    const tasks = getTasksForDate(dateStr);
       
     if (tasks.length === 0) {
       const currentLang = localStorage.getItem('site_lang') || 'en';
