@@ -1143,6 +1143,24 @@ function applyLang(lang) {
     });
     return await res.json();
   }
+  
+  async function saveProfile() {
+    const email = localStorage.getItem('currentUser');
+    const newName = document.getElementById('profileNameInput').value;
+    
+    const res = await fetch('/api/update-profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, name: newName })
+    });
+
+    if (res.ok) {
+      showNotification('Profile updated!', 'success');
+      closeOverlay(modalProfile);
+      // Обновляем данные на странице
+      renderUI(); 
+    }
+  }
 
   // Сохраняем в localStorage только email текущего пользователя (для UI)
   function setCurrentUser(email) {
@@ -1797,6 +1815,7 @@ function applyLang(lang) {
         if (userAvatar) userAvatar.style.background = generateColor(newName);
 
         closeOverlay(modalProfile);
+        saveProfile(modalProfile);
         showNotification(t.profile?.profileUpdated || 'Profile updated!', 'success');
       });
     }
