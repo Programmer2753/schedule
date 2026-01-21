@@ -1497,7 +1497,7 @@ function applyLang(lang) {
 
     const dateHtml = task.date 
         ? `<span class="date-text">${formatShortDate(task.date)}</span>` 
-        : `<img src="date_icon.png">`;
+        : `<img src="Images/date_icon.png">`;
 
     row.innerHTML = `
       <td>
