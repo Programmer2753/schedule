@@ -971,23 +971,23 @@ function applyLang(lang) {
 
     menu.innerHTML = `
       <div class="menu-item" onclick="handleRename('${taskId}')">
-        <span class="menu-icon"><img src="rename_icon.png" alt=""></span>
+        <span class="menu-icon"><img src="Images/rename_icon.png" alt=""></span>
         <span class="menu-text">${t.taskActions?.rename || 'Rename'}</span>
       </div>
       
       <div class="menu-item sub-menu-trigger">
-        <span class="menu-icon"><img src="type_icon.png" alt=""></span>
+        <span class="menu-icon"><img src="Images/type_icon.png" alt=""></span>
         <span class="menu-text">${t.taskActions?.taskType || 'Task Type'}</span>
         <span class="arrow-icon">▶</span>
       </div>
       
       <div class="menu-item" onclick="handleDuplicate('${taskId}')">
-        <span class="menu-icon"><img src="duplicate_icon.png" alt=""></span>
+        <span class="menu-icon"><img src="Images/duplicate_icon.png" alt=""></span>
         <span class="menu-text">${t.taskActions?.duplicate || 'Duplicate'}</span>
       </div>
       
       <div class="menu-item delete-item" onclick="handleDelete('${taskId}')">
-        <span class="menu-icon"><img src="delete_icon.png" alt=""></span>
+        <span class="menu-icon"><img src="Images/delete_icon.png" alt=""></span>
         <span class="menu-text">${t.taskActions?.delete || 'Delete'}</span>
       </div>
     `;
@@ -1403,11 +1403,11 @@ function applyLang(lang) {
     cell.dataset.priority = priority;
 
     const map = {
-      urgent: { icon: 'urgent_icon.png', text: 'Urgent' },
-      high:   { icon: 'high_icon.png',   text: 'High' },
-      normal: { icon: 'normal_icon.png', text: 'Normal' },
-      low:    { icon: 'low_icon.png',    text: 'Low' },
-      none:   { icon: 'priority_icon.png', text: '' }
+      urgent: { icon: 'Images/urgent_icon.png', text: 'Urgent' },
+      high:   { icon: 'Images/high_icon.png',   text: 'High' },
+      normal: { icon: 'Images/normal_icon.png', text: 'Normal' },
+      low:    { icon: 'Images/low_icon.png',    text: 'Low' },
+      none:   { icon: 'Images/priority_icon.png', text: '' }
     };
 
     if (img) img.src = map[priority].icon;
@@ -1470,7 +1470,7 @@ function applyLang(lang) {
                 if (dateStr) {
                     dateBtn.innerHTML = `<span class="date-text">${formatShortDate(dateStr)}</span>`;
                 } else {
-                    dateBtn.innerHTML = `<img src="date_icon.png">`;
+                    dateBtn.innerHTML = `<img src="Images/date_icon.png">`;
                 }
             }
         }
@@ -1509,11 +1509,11 @@ function applyLang(lang) {
       <td class="icon-cell"></td>
       <td class="icon-cell date-btn">${dateHtml}</td>
       <td class="icon-cell priority-btn" data-priority="${task.priority || 'none'}">
-        <img src="priority_icon.png">
+        <img src="Images/priority_icon.png">
         <span class="priority-label"></span>
       </td>
       <td><span class="status ${statusClass(task.status)}">${task.status}</span></td>
-      <td class="icon-cell"><img src="comment_icon.png"></td>
+      <td class="icon-cell"><img src="Images/comment_icon.png"></td>
       <td class="icon-cell">
         <button class="task-menu-btn" style="color: #666; background: none; border: none;">···</button>
       </td>
@@ -1672,7 +1672,7 @@ function applyLang(lang) {
       if (profileRegistered && user.registeredAt) {
         const date = new Date(user.registeredAt);
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        const lang = localStorage.getItem('site_lang') || 'uk';
+        const lang = localStorage.getItem('site_lang') || 'en';
         const locale = lang === 'ua' || lang === 'uk' ? 'uk-UA' : 'en-US';
         profileRegistered.textContent = date.toLocaleDateString(locale, options);
       }
@@ -2266,11 +2266,11 @@ function applyLang(lang) {
               </div>
 
               <button class="add-task-icon" title="Due date">
-                  <img src="date_icon.png">
+                  <img src="Images/date_icon.png">
               </button>
 
               <div class="priority-btn" data-priority="none">
-                <img src="priority_icon.png">
+                <img src="Images/priority_icon.png">
                 <span class="priority-label"></span>
               </div>
 
@@ -2408,11 +2408,11 @@ function applyLang(lang) {
       menu.className = 'priority-menu';
 
       menu.innerHTML = `
-        <button data-p="urgent"><img src="urgent_icon.png"> Urgent</button>
-        <button data-p="high"><img src="high_icon.png"> High</button>
-        <button data-p="normal"><img src="normal_icon.png"> Normal</button>
-        <button data-p="low"><img src="low_icon.png"> Low</button>
-        <button data-p="none"><img src="clear_icon.png"> Clear</button>
+        <button data-p="urgent"><img src="Images/urgent_icon.png"> Urgent</button>
+        <button data-p="high"><img src="Images/high_icon.png"> High</button>
+        <button data-p="normal"><img src="Images/normal_icon.png"> Normal</button>
+        <button data-p="low"><img src="Images/low_icon.png"> Low</button>
+        <button data-p="none"><img src="Images/clear_icon.png"> Clear</button>
       `;
 
       document.body.appendChild(menu);
@@ -2527,7 +2527,7 @@ function applyLang(lang) {
 
     function generateAIResponse(userMessage) {
       const lowerMsg = userMessage.toLowerCase().trim();
-      const currentLang = localStorage.getItem('site_lang') || 'uk';
+      const currentLang = localStorage.getItem('site_lang') || 'en';
       const t = i18n[currentLang];
       
       const hasWords = (words) => words.some(word => lowerMsg.includes(word));

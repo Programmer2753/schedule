@@ -9,15 +9,15 @@
 body {
     margin: 0;
     font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
-    cursor: url('cursor321.png'), auto;
+    cursor: url('Images/cursor321.png'), auto;
 }
 
 a, button, span, li, td {
-    cursor: url("hand_cursor321.png"), auto;
+    cursor: url("Images/hand_cursor321.png"), auto;
 }
 
 input, label, p, h1, h2, h3, h4, h5, h6 {
-  cursor: url('text_cursor321.png'), auto;
+  cursor: url('Images/text_cursor321.png'), auto;
 }
 
 .button {
@@ -36,7 +36,7 @@ input, label, p, h1, h2, h3, h4, h5, h6 {
         0 8px 20px rgba(0, 0, 0, 0.25);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     text-decoration: none;
-    cursor: url("hand_cursor321.png"), auto;
+    cursor: url("Images/hand_cursor321.png"), auto;
 }
 
 .home-header {
@@ -147,7 +147,7 @@ nav a:hover,
     padding: 4px 8px;
     border-radius: 999px;
     background: rgba(0, 0, 0, 0.04);
-    cursor: url("hand_cursor321.png"), auto;
+    cursor: url("Images/hand_cursor321.png"), auto;
     transition: background 0.2s ease;
 }
 
@@ -685,7 +685,7 @@ nav a:hover,
     transition: color 0.2s;
     flex-shrink: 0;
     padding: 0 4px;
-    cursor: url("hand_cursor321.png"), auto;
+    cursor: url("Images/hand_cursor321.png"), auto;
 }
 
 .custom-notification-close:hover {
@@ -1032,7 +1032,7 @@ nav a:hover,
     align-items: center;
     font-size: 14px;
     color: #9a9a9a;
-    cursor: url("hand_cursor321.png"), auto;
+    cursor: url("Images/hand_cursor321.png"), auto;
 }
 
 .view-tab.active {
@@ -1179,7 +1179,7 @@ nav a:hover,
   display: flex;
   align-items: center;
   gap: 8px;
-  cursor: url("hand_cursor321.png"), auto;
+  cursor: url("Images/hand_cursor321.png"), auto;
 }
 
 .status-item:hover {
@@ -1373,7 +1373,7 @@ nav a:hover,
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
-    cursor: url("hand_cursor321.png"), auto;
+    cursor: url("Images/hand_cursor321.png"), auto;
 }
 
 .icon-cell:hover {
@@ -1590,7 +1590,7 @@ nav a:hover,
     justify-content: center;
     font-size: 16px;
     position: relative;
-    cursor: url("hand_cursor321.png"), auto;
+    cursor: url("Images/hand_cursor321.png"), auto;
 }
 
 .sidebar-item.active .icon {
@@ -1919,7 +1919,7 @@ nav a:hover,
   font-size: 14px;
   transition: background 0.2s;
   position: relative;
-  cursor: url("hand_cursor321.png"), auto;
+  cursor: url("Images/hand_cursor321.png"), auto;
 }
 
 .menu-item:hover {
@@ -2050,7 +2050,7 @@ nav a:hover,
     position: relative;
     color: #e6e6e6;
     background: #0f0f10;
-    cursor: url("hand_cursor321.png"), auto;
+    cursor: url("Images/hand_cursor321.png"), auto;
 }
 
 .calendar-day:hover {
@@ -2545,7 +2545,7 @@ nav a:hover,
     align-items: center;
     gap: 12px;
     transition: all 0.3s ease;
-    cursor: url('cursor321.png'), pointer;
+    cursor: url('Images/cursor321.png'), pointer;
     color: #e6e6e6;
     font-size: 15px;
 }
@@ -2609,7 +2609,7 @@ nav a:hover,
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    cursor: url('cursor321.png'), pointer;
+    cursor: url('Images/cursor321.png'), pointer;
     transition: background 0.2s ease;
     color: #e6e6e6;
     font-size: 15px;
@@ -2861,7 +2861,7 @@ nav a:hover,
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: url("hand_cursor321.png"), auto;
+    cursor: url("Images/hand_cursor321.png"), auto;
 }
 
 .ai-send-btn:hover {
@@ -2936,7 +2936,7 @@ nav a:hover,
     grid-template-columns: repeat(7, 1fr) !important;
     gap: 2px;
     min-height: 150px;
-    cursor: url("hand_cursor321.png"), auto;
+    cursor: url("Images/hand_cursor321.png"), auto;
 }
 
 .quick-day {
