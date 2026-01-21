@@ -58,27 +58,30 @@ export default async function handler(req, res) {
   // PUT: Обновить задачу
   if (method === 'PUT') {
     const { id, ...changes } = req.body;
-    console.log('Updating task:', id, changes);
     
-    const dbFields = {};
-    // Важно: маппинг name -> title
-    if (changes.name) dbFields.title = changes.name;
-    if (changes.description) dbFields.description = changes.description;
-    if (changes.status) dbFields.status = changes.status;
-    if (changes.priority) dbFields.priority = changes.priority;
-    if (changes.type) dbFields.type = changes.type;
-    if (changes.date !== undefined) dbFields.date = changes.date;
+    // Проверка на ID
+    if (!id) return res.status(400).json({ error: 'Task ID is required' });
 
-    if (Object.keys(dbFields).length === 0) return res.status(400).json({ message: 'No changes provided' });
+    const dbFields = {};
+    if (changes.name) dbFields.title = changes.name;
+    if (changes.description !== undefined) dbFields.description = changes.description;
+    if (changes.status) dbFields.status = changes.status;
+    
+    // Всегда обновляем дату изменения
+    dbFields.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+    if (Object.keys(dbFields).length === 0) {
+        return res.status(400).json({ message: 'No valid fields to update' });
+    }
 
     try {
-      const setClause = Object.keys(dbFields).map(key => `${key} = ?`).join(', ');
+      const setClause = Object.keys(dbFields).map(key => `\`${key}\` = ?`).join(', ');
       const values = [...Object.values(dbFields), id];
 
       await pool.query(`UPDATE tasks SET ${setClause} WHERE id = ?`, values);
       return res.status(200).json({ message: 'Task updated' });
     } catch (error) {
-      console.error('CRITICAL DATABASE ERROR in PUT /tasks:', error);
+      console.error('DATABASE ERROR:', error);
       return res.status(500).json({ error: error.message });
     }
   }
