@@ -877,14 +877,27 @@ function applyLang(lang) {
         grid.appendChild(div);
     }
 
+    // ВАЖНО: Добавили await, чтобы получить реальные данные
+    const user = await getCurrentUserData();
+    
     const today = new Date();
     for (let d = 1; d <= lastDay.getDate(); d++) {
         const div = document.createElement('div');
         const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
         
-        const user = getCurrentUserData();
-        const currentTask = user.tasks.find(t => t.id === activeTaskIdForQuickDate);
-        const isSelected = currentTask && currentTask.date === `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        // Безопасная проверка: убеждаемся, что user и tasks существуют
+        let isSelected = false;
+        if (user && user.tasks) {
+          // Используем нестрогое сравнение (==), т.к. id может быть строкой или числом
+          const currentTask = user.tasks.find(t => t.id == activeTaskIdForQuickDate);
+          if (currentTask && currentTask.date) {
+              // Форматируем дату для сравнения
+              const checkDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+              // Учитываем, что из базы дата может прийти в формате ISO (YYYY-MM-DDTHH...)
+              const taskDateShort = currentTask.date.split('T')[0];
+              isSelected = taskDateShort === checkDate;
+          }
+        }
 
         div.className = `quick-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`;
         div.textContent = d;
@@ -905,11 +918,11 @@ function applyLang(lang) {
         picker.appendChild(footer);
     }
 
-     footer.innerHTML = `<button class="clear-date-btn" type="button">${t.calendar?.noDate || '✕ No date'}</button>`;
-         footer.querySelector('.clear-date-btn').onclick = (e) => {
-         e.stopPropagation();
-         applyDateToTask(null);
-     };
+    footer.innerHTML = `<button class="clear-date-btn" type="button">${t.calendar?.noDate || '✕ No date'}</button>`;
+    footer.querySelector('.clear-date-btn').onclick = (e) => {
+        e.stopPropagation();
+        applyDateToTask(null);
+    };
   }
 
   function statusClass(s) {
@@ -933,13 +946,27 @@ function applyLang(lang) {
   }
 
   async function getCurrentUserData() {
-    const email = getCurrentUser();
+    const email = localStorage.getItem('currentUser');
     if (!email) return null;
 
-    const res = await fetch(`/api/user?email=${encodeURIComponent(email)}`);
-    if (!res.ok) return null;
+    try {
+      // 1. Грузим профиль
+      const userRes = await fetch(`/api/user?email=${encodeURIComponent(email)}`);
+      if (!userRes.ok) return null;
+      const userData = await userRes.json();
 
-    return await res.json();
+      // 2. Грузим задачи (чтобы статистика и календарь работали)
+      const tasksRes = await fetch(`/api/tasks?email=${encodeURIComponent(email)}`);
+      const tasksData = await tasksRes.json();
+
+      // 3. Объединяем, чтобы старый код работал
+      userData.tasks = tasksData.tasks || [];
+      
+      return userData;
+    } catch (e) {
+      console.error('Error fetching user data:', e);
+      return null;
+    }
   }
 
   function updateCurrentUserData(updateFn) {
@@ -1642,8 +1669,9 @@ function applyLang(lang) {
     const openProfileBtn = document.getElementById('openProfileBtn');
     const saveProfileBtn = document.getElementById('saveProfileBtn');
 
-    function openProfileModal() {
-      const user = getCurrentUserData();
+    async function openProfileModal() {
+      // Добавили await
+      const user = await getCurrentUserData(); 
       if (!user) return;
 
       const profileName = document.getElementById('profileName');
@@ -1653,6 +1681,7 @@ function applyLang(lang) {
       const profileNameInput = document.getElementById('profileNameInput');
       const profileRegistered = document.getElementById('profileRegistered');
       
+      // Теперь tasks подгружаются корректно
       const totalTasks = user.tasks ? user.tasks.length : 0;
       const completedTasks = user.tasks ? user.tasks.filter(t => t.status === 'DONE').length : 0;
       const productivity = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -1677,9 +1706,14 @@ function applyLang(lang) {
         profileRegistered.textContent = date.toLocaleDateString(locale, options);
       }
 
-      document.getElementById('profileTotalTasks').textContent = totalTasks;
-      document.getElementById('profileCompletedTasks').textContent = completedTasks;
-      document.getElementById('profileProductivity').textContent = productivity + '%';
+      // Обновляем статистику в модалке
+      const totalEl = document.getElementById('profileTotalTasks');
+      const completedEl = document.getElementById('profileCompletedTasks');
+      const prodEl = document.getElementById('profileProductivity');
+
+      if (totalEl) totalEl.textContent = totalTasks;
+      if (completedEl) completedEl.textContent = completedTasks;
+      if (prodEl) prodEl.textContent = productivity + '%';
 
       openOverlay(modalProfile);
     }
