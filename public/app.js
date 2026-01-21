@@ -1198,7 +1198,7 @@ function applyLang(lang) {
     document.querySelectorAll('.priority-menu').forEach(m => m.remove());
   }
 
-  async function renderCalendar() {
+  function renderCalendar() {
     const calendarGrid = document.getElementById('calendarGrid');
     const calendarTitle = document.getElementById('calendarTitle');
       
@@ -1209,10 +1209,6 @@ function applyLang(lang) {
     const month = currentCalendarDate.getMonth();
 
     calendarTitle.textContent = `${monthNames[lang][month]} ${year}`;
-
-    // ВАЖНО: Загружаем данные пользователя ОДИН раз перед циклом
-    const user = await getCurrentUserData();
-    const tasks = user ? user.tasks : [];
 
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
@@ -1228,20 +1224,19 @@ function applyLang(lang) {
 
     for (let i = firstDayOfWeek - 1; i >= 0; i--) {
       const day = daysInPrevMonth - i;
-      // Передаем tasks в createDayElement
-      const dayEl = createDayElement(day, 'prev-month', year, month - 1, tasks);
+      const dayEl = createDayElement(day, 'prev-month', year, month - 1);
       calendarGrid.appendChild(dayEl);
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const dayEl = createDayElement(day, 'current-month', year, month, tasks);
+      const dayEl = createDayElement(day, 'current-month', year, month);
       calendarGrid.appendChild(dayEl);
     }
 
     const totalCells = calendarGrid.children.length;
     const remainingCells = 42 - totalCells;
     for (let day = 1; day <= remainingCells; day++) {
-      const dayEl = createDayElement(day, 'next-month', year, month + 1, tasks);
+      const dayEl = createDayElement(day, 'next-month', year, month + 1);
       calendarGrid.appendChild(dayEl);
     }
   }
