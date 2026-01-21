@@ -1143,24 +1143,6 @@ function applyLang(lang) {
     });
     return await res.json();
   }
-  
-  async function saveProfile() {
-    const email = localStorage.getItem('currentUser');
-    const newName = document.getElementById('profileNameInput').value;
-    
-    const res = await fetch('/api/update-profile', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, name: newName })
-    });
-
-    if (res.ok) {
-      showNotification('Profile updated!', 'success');
-      closeOverlay(modalProfile);
-      // Обновляем данные на странице
-      renderUI(); 
-    }
-  }
 
   // Сохраняем в localStorage только email текущего пользователя (для UI)
   function setCurrentUser(email) {
@@ -1708,6 +1690,24 @@ function applyLang(lang) {
             hash = str.charCodeAt(i) + ((hash << 5) - hash);
         }
         return `hsl(${hash % 360}, 55%, 45%)`;
+    }
+
+    async function saveProfile() {
+      const email = localStorage.getItem('currentUser');
+      const newName = document.getElementById('profileNameInput').value;
+      
+      const res = await fetch('/api/update-profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name: newName })
+      });
+
+      if (res.ok) {
+        showNotification('Profile updated!', 'success');
+        closeOverlay(modalProfile);
+        // Обновляем данные на странице
+        renderUI(); 
+      }
     }
 
     const modalProfile = document.getElementById('modalProfile');
