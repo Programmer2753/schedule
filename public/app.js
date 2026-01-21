@@ -1198,7 +1198,7 @@ function applyLang(lang) {
     document.querySelectorAll('.priority-menu').forEach(m => m.remove());
   }
 
-  function renderCalendar() {
+  async function renderCalendar() {
     const calendarGrid = document.getElementById('calendarGrid');
     const calendarTitle = document.getElementById('calendarTitle');
       
@@ -1209,6 +1209,10 @@ function applyLang(lang) {
     const month = currentCalendarDate.getMonth();
 
     calendarTitle.textContent = `${monthNames[lang][month]} ${year}`;
+
+    // ВАЖНО: Загружаем данные пользователя ОДИН раз перед циклом
+    const user = await getCurrentUserData();
+    const tasks = user ? user.tasks : [];
 
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
@@ -1224,24 +1228,25 @@ function applyLang(lang) {
 
     for (let i = firstDayOfWeek - 1; i >= 0; i--) {
       const day = daysInPrevMonth - i;
-      const dayEl = createDayElement(day, 'prev-month', year, month - 1);
+      // Передаем tasks в createDayElement
+      const dayEl = createDayElement(day, 'prev-month', year, month - 1, tasks);
       calendarGrid.appendChild(dayEl);
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const dayEl = createDayElement(day, 'current-month', year, month);
+      const dayEl = createDayElement(day, 'current-month', year, month, tasks);
       calendarGrid.appendChild(dayEl);
     }
 
     const totalCells = calendarGrid.children.length;
     const remainingCells = 42 - totalCells;
     for (let day = 1; day <= remainingCells; day++) {
-      const dayEl = createDayElement(day, 'next-month', year, month + 1);
+      const dayEl = createDayElement(day, 'next-month', year, month + 1, tasks);
       calendarGrid.appendChild(dayEl);
     }
   }
 
-  function createDayElement(day, className, year, month) {
+  function createDayElement(day, className, year, month, tasks) {
     const dayEl = document.createElement('div');
     dayEl.className = `calendar-day ${className}`;
     dayEl.textContent = day;
@@ -1258,7 +1263,9 @@ function applyLang(lang) {
       dayEl.classList.add('selected');
     }
 
-    const tasksForDate = getTasksForDate(dateStr);
+    // Передаем список задач в функцию фильтрации
+    const tasksForDate = getTasksForDate(dateStr, tasks);
+    
     if (tasksForDate.length > 0 && className === 'current-month') {
       const badge = document.createElement('div');
       badge.className = 'task-count-badge';
@@ -1290,7 +1297,8 @@ function applyLang(lang) {
     return `${year}-${month}-${day}`;
   }
 
-  function selectDate(dateStr) {
+  // Теперь функция асинхронная
+  async function selectDate(dateStr) {
     selectedDate = dateStr;
       
     document.querySelectorAll('.calendar-day').forEach(day => day.classList.remove('selected'));
@@ -1298,25 +1306,40 @@ function applyLang(lang) {
     if (selectedDay) selectedDay.classList.add('selected');
 
     if (activeTaskIdForDate) {
-        updateTask(activeTaskIdForDate, { date: dateStr });
+        // Ждем обновления задачи
+        await updateTask(activeTaskIdForDate, { date: dateStr });
           
         console.log(`Task ${activeTaskIdForDate} updated with date ${dateStr}`);
           
         document.getElementById('calendarPopup').style.display = 'none';
         activeTaskIdForDate = null;
+        
+        // Перерисовываем календарь, чтобы обновились точки
+        renderCalendar();
     }
 
-    displayTasksForDate(dateStr);
+    // Вызываем отображение (оно тоже теперь async)
+    await displayTasksForDate(dateStr);
   }
 
-  function getTasksForDate(dateStr) {
-    const user = getCurrentUserData();
-    if (!user || !user.tasks) return [];
+  // Исправлена логика сравнения дат (MySQL vs JS)
+  function getTasksForDate(dateStr, tasksList) {
+    // Если список задач не передан, пытаемся получить его (но лучше передавать)
+    if (!tasksList) {
+       // Этот блок сработает только в крайнем случае, если tasksList не передан
+       return []; 
+    }
       
-    return user.tasks.filter(task => task.date === dateStr);
+    return tasksList.filter(task => {
+        if (!task.date) return false;
+        // ВАЖНО: База возвращает 2024-01-20T00:00:00.000Z. Берем только часть до T.
+        const taskDateShort = task.date.toString().split('T')[0];
+        return taskDateShort === dateStr;
+    });
   }
 
-  function displayTasksForDate(dateStr) {
+  // Теперь функция асинхронная, сама грузит свежие данные
+  async function displayTasksForDate(dateStr) {
     const selectedDateTitle = document.getElementById('selectedDateTitle');
     const dateTasksList = document.getElementById('dateTasksList');
     const addTaskForDateBtn = document.getElementById('addTaskForDateBtn');
@@ -1333,7 +1356,12 @@ function applyLang(lang) {
     addTaskForDateBtn.style.display = 'flex';
     addTaskForDateBtn.innerHTML = `<span style="font-size: 20px; margin-right: 4px;">+</span> ${t.calendar?.addTaskBtn || '+ Add task'}`;
 
-    const tasks = getTasksForDate(dateStr);
+    // 1. Грузим свежие данные пользователя
+    const user = await getCurrentUserData();
+    const allTasks = user ? user.tasks : [];
+
+    // 2. Фильтруем с помощью исправленной функции
+    const tasks = getTasksForDate(dateStr, allTasks);
       
     if (tasks.length === 0) {
       const currentLang = localStorage.getItem('site_lang') || 'en';
