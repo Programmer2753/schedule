@@ -1001,17 +1001,21 @@ function applyLang(lang) {
   }
 
   async function renderUI() {
-    // 1. Сначала обновляем общую инфу (имя в шапке, букву аватара, видимость дашборда)
-    await updateUIForUser();
+    try {
+        // 1. Обновляем шапку
+        await updateUIForUser();
 
-    // 2. Если мы на странице с календарем, обновляем и его
-    if (document.getElementById('calendarGrid')) {
-      await renderCalendar();
-    }
+        // 2. Если есть календарь - обновляем
+        if (document.getElementById('calendarGrid')) {
+            await renderCalendar();
+        }
 
-    // 3. Если выбрана дата, обновляем список задач для этой даты
-    if (typeof selectedDate !== 'undefined' && selectedDate) {
-      await displayTasksForDate(selectedDate);
+        // 3. Если выбрана дата - обновляем задачи
+        if (typeof selectedDate !== 'undefined' && selectedDate) {
+            await displayTasksForDate(selectedDate);
+        }
+    } catch (e) {
+        console.error("Ошибка в renderUI:", e);
     }
   }
 
@@ -1703,7 +1707,6 @@ function applyLang(lang) {
       const userName = document.getElementById('userName');
 
       if (currentUser) {
-        renderUI()
         if (landing) {
           landing.style.display = 'none';
           dashboard.style.display = 'flex';
@@ -1755,40 +1758,45 @@ function applyLang(lang) {
     async function saveProfile() {
       const email = localStorage.getItem('currentUser');
       const nameInput = document.getElementById('profileNameInput');
-    
+
       if (!nameInput) return;
       const newName = nameInput.value.trim();
 
       if (!newName) {
-        showNotification('Name cannot be empty', 'error');
-        return;
+          showNotification('Name cannot be empty', 'error');
+          return;
       }
 
       try {
-        const res = await fetch('/api/update-profile', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name: newName })
-        });
+          const res = await fetch('/api/update-profile', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, name: newName })
+          });
 
-        if (res.ok) {
-          const errorData = await res.json();
-          console.log("Детали ошибки сервера:", errorData.details);
-          clearUserCache();
-          await renderUI();
-          showNotification('Profile updated!', 'success');
-          // Важно: закрываем модалку
-          if (typeof closeOverlay === 'function') {
-            closeOverlay(document.getElementById('modalProfile'));
+          if (res.ok) {
+              // Успех! Не пытаемся читать res.json() как ошибку
+              showNotification('Profile updated!', 'success');
+              
+              // 1. Очищаем старые данные из кэша
+              clearUserCache();
+              
+              // 2. Закрываем модалку
+              if (typeof closeOverlay === 'function') {
+                  closeOverlay(document.getElementById('modalProfile'));
+              }
+              
+              // 3. Обновляем интерфейс
+              await renderUI(); 
+              
+          } else {
+              // Ошибка - вот тут читаем текст ошибки
+              const err = await res.json();
+              throw new Error(err.error || 'Update failed');
           }
-          // Перерисовываем интерфейс, чтобы имя обновилось везде (в шапке и т.д.)
-        } else {
-          const err = await res.json();
-          throw new Error(err.error);
-        }
       } catch (e) {
-        console.error('Save profile error:', e);
-        showNotification('Error saving profile', 'error');
+          console.error('Save profile error:', e);
+          showNotification('Error saving profile', 'error');
       }
     }
 
