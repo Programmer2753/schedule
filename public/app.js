@@ -1648,42 +1648,6 @@ function applyLang(lang) {
     const avatarLetter = document.getElementById('avatarLetter');
     const userAvatar = document.getElementById('userAvatar');
 
-    function updateUIForUser() {
-      const currentUser = getCurrentUser();
-      const landing = document.getElementById('landingPage');
-      const about = document.getElementById('aboutPage')
-      const dashboard = document.getElementById('dashboardPage');
-
-      if (currentUser) {
-        if (landing) {
-          landing.style.display = 'none';
-          dashboard.style.display = 'flex';
-        }
-        if (about) {
-          window.location.href = '/index.html'
-        }
-      
-        if (userInfo) {
-          userInfo.style.display = 'flex';
-          const userData = getCurrentUserData();
-          const displayName = userData?.profile?.name || getEmailName(currentUser);
-          
-          if (userName) userName.textContent = displayName;
-          if (avatarLetter && userAvatar) {
-            avatarLetter.textContent = displayName[0].toUpperCase();
-            const avatarColor = userData?.profile?.avatarColor || generateColor(displayName);
-            userAvatar.style.background = avatarColor;
-          }
-        }
-      } else {
-        if (landing) {
-          landing.style.display = 'flex';
-          dashboard.style.display = 'none';
-          if (userInfo) userInfo.style.display = 'none';
-        }
-      }
-    }
-
     function generateColor(str) {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
@@ -1734,6 +1698,42 @@ function applyLang(lang) {
       } catch (e) {
         console.error('Save profile error:', e);
         showNotification('Error saving profile', 'error');
+      }
+    }
+
+    function updateUIForUser() {
+      const currentUser = getCurrentUser();
+      const landing = document.getElementById('landingPage');
+      const about = document.getElementById('aboutPage')
+      const dashboard = document.getElementById('dashboardPage');
+
+      if (currentUser) {
+        if (landing) {
+          landing.style.display = 'none';
+          dashboard.style.display = 'flex';
+        }
+        if (about) {
+          window.location.href = '/index.html'
+        }
+      
+        if (userInfo) {
+          userInfo.style.display = 'flex';
+          const userData = getCurrentUserData();
+          const displayName = userData?.profile?.name || getEmailName(currentUser);
+          
+          if (userName) userName.textContent = displayName;
+          if (avatarLetter && userAvatar) {
+            avatarLetter.textContent = displayName[0].toUpperCase();
+            const avatarColor = userData?.profile?.avatarColor || generateColor(displayName);
+            userAvatar.style.background = avatarColor;
+          }
+        }
+      } else {
+        if (landing) {
+          landing.style.display = 'flex';
+          dashboard.style.display = 'none';
+          if (userInfo) userInfo.style.display = 'none';
+        }
       }
     }
 
