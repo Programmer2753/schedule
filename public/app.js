@@ -979,21 +979,6 @@ function applyLang(lang) {
     cachedUserData = null;
   }
 
-  async function renderUI() {
-    // 1. Сначала обновляем общую инфу (имя в шапке, букву аватара, видимость дашборда)
-    await updateUIForUser();
-
-    // 2. Если мы на странице с календарем, обновляем и его
-    if (document.getElementById('calendarGrid')) {
-      await renderCalendar();
-    }
-
-    // 3. Если выбрана дата, обновляем список задач для этой даты
-    if (typeof selectedDate !== 'undefined' && selectedDate) {
-      await displayTasksForDate(selectedDate);
-    }
-  }
-
   function updateCurrentUserData(updateFn) {
     const users = getUsers();
     const email = getCurrentUser();
@@ -1682,7 +1667,6 @@ function applyLang(lang) {
       const userName = document.getElementById('userName');
 
       if (currentUser) {
-        renderUI();
         if (landing) {
           landing.style.display = 'none';
           dashboard.style.display = 'flex';
@@ -1754,7 +1738,6 @@ function applyLang(lang) {
           const errorData = await res.json();
           console.log("Детали ошибки сервера:", errorData.details);
           clearUserCache();
-          await renderUI();
           showNotification('Profile updated!', 'success');
           // Важно: закрываем модалку
           if (typeof closeOverlay === 'function') {
@@ -3279,8 +3262,6 @@ function applyLang(lang) {
         }
       });
     });
-
-    renderUI();
 
   });
 })();
