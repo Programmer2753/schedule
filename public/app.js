@@ -1735,6 +1735,8 @@ function applyLang(lang) {
         });
 
         if (res.ok) {
+          const errorData = await res.json();
+          console.log("Детали ошибки сервера:", errorData.details);
           clearUserCache();
           await renderUI();
           showNotification('Profile updated!', 'success');
