@@ -1,26 +1,15 @@
 import mysql from 'mysql2/promise';
 
-let pool;
-
-try {
-  if (!process.env.DB_HOST) {
-    throw new Error('DB_HOST environment variable is missing!');
-  }
-
-  pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-    connectTimeout: 20000 // Увеличим тайм-аут до 20 сек
-  });
-  
-  console.log('Database pool created successfully');
-} catch (error) {
-  console.error('Database connection configuration error:', error);
-}
+// Создаем пул соединений с лимитом
+const pool = mysql.createPool({
+  host: process.env.MYSQL_HOST,
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE,
+  waitForConnections: true,
+  // Установи лимит 2 или 3, если у тебя бесплатная база (типа db4free или аналоги)
+  connectionLimit: 3, 
+  queueLimit: 0
+});
 
 export default pool;
