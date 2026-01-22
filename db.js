@@ -1,20 +1,33 @@
 import mysql from 'mysql2/promise';
 
-// Проверка: загрузились ли переменные
-if (!process.env.MYSQL_HOST) {
-  console.error("КРИТИЧЕСКАЯ ОШИБКА: MYSQL_HOST не определен в Environment Variables!");
+// 1. Проверяем наличие переменных (выведется в логи Vercel)
+if (!process.env.DB_HOST) {
+  console.error("ОШИБКА: Переменная DB_HOST не найдена в окружении!");
 }
 
 const pool = mysql.createPool({
-  host: process.env.MYSQL_HOST, // Здесь должно быть что-то вроде sql7.freemysqlhosting.net
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
+  // Используй именно те имена, которые вписаны в Vercel!
+  host: process.env.DB_HOST, 
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  
   waitForConnections: true,
+  // Для бесплатных баз лучше ставить 2-3, 10 — это слишком много, 
+  // база будет выкидывать ошибку "too many connections"
   connectionLimit: 3, 
   queueLimit: 0,
-  // Добавляем защиту от тайм-аутов
-  connectTimeout: 10000 
+  connectTimeout: 20000 
 });
+
+// Пробросим небольшую проверку в логи при инициализации
+pool.getConnection()
+  .then(conn => {
+    console.log("Успешное подключение к удаленной БД:", process.env.DB_HOST);
+    conn.release();
+  })
+  .catch(err => {
+    console.error("Ошибка подключения к БД в db.js:", err.message);
+  });
 
 export default pool;
