@@ -1000,25 +1000,6 @@ function applyLang(lang) {
     activeFetchPromise = null;
   }
 
-  async function renderUI() {
-    try {
-        // 1. Обновляем шапку
-        await updateUIForUser();
-
-        // 2. Если есть календарь - обновляем
-        if (document.getElementById('calendarGrid')) {
-            await renderCalendar();
-        }
-
-        // 3. Если выбрана дата - обновляем задачи
-        if (typeof selectedDate !== 'undefined' && selectedDate) {
-            await displayTasksForDate(selectedDate);
-        }
-    } catch (e) {
-        console.error("Ошибка в renderUI:", e);
-    }
-  }
-
   function updateCurrentUserData(updateFn) {
     const users = getUsers();
     const email = getCurrentUser();
@@ -1677,6 +1658,25 @@ function applyLang(lang) {
       const addRow = document.querySelector(`.add-task-row[data-status="${task.status}"]`);
       renderTask(task, addRow);
     });
+  }
+
+  async function renderUI() {
+    try {
+        // 1. Обновляем шапку
+        await updateUIForUser();
+
+        // 2. Если есть календарь - обновляем
+        if (document.getElementById('calendarGrid')) {
+            await renderCalendar();
+        }
+
+        // 3. Если выбрана дата - обновляем задачи
+        if (typeof selectedDate !== 'undefined' && selectedDate) {
+            await displayTasksForDate(selectedDate);
+        }
+    } catch (e) {
+        console.error("Ошибка в renderUI:", e);
+    }
   }
 
   window.addEventListener('DOMContentLoaded', () => {
@@ -3308,6 +3308,7 @@ function applyLang(lang) {
         }
       });
     });
+
     renderUI()
 
   });
