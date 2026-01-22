@@ -945,38 +945,59 @@ function applyLang(lang) {
     return localStorage.getItem('currentUser');
   }
 
-  let cachedUserData = null; // Переменная для хранения данных
+  let userDataCache = null;
+  let activeFetchPromise = null; // Хранит текущий запрос
 
   async function getCurrentUserData() {
     const email = localStorage.getItem('currentUser');
     if (!email) return null;
 
-    // Если данные уже есть, возвращаем их, а не идем в базу
-    if (cachedUserData && cachedUserData.email === email) {
-      return cachedUserData;
+    // 1. Если данные уже в памяти — отдаем мгновенно
+    if (userDataCache && userDataCache.email === email) {
+      return userDataCache;
     }
 
-    try {
-      const userRes = await fetch(`/api/user?email=${encodeURIComponent(email)}`);
-      const userData = await userRes.json();
-
-      const tasksRes = await fetch(`/api/tasks?email=${encodeURIComponent(email)}`);
-      const tasksData = await tasksRes.json();
-
-      userData.tasks = tasksData.tasks || [];
-      
-      // Сохраняем в кэш
-      cachedUserData = userData; 
-      return userData;
-    } catch (e) {
-      console.error('Error fetching user data:', e);
-      return null;
+    // 2. Если запрос УЖЕ идет, но еще не закончился — возвращаем тот же самый Promise.
+    // Это предотвращает дублирование запросов в одну и ту же миллисекунду.
+    if (activeFetchPromise) {
+      return activeFetchPromise;
     }
+
+    // 3. Если запроса нет — создаем новый
+    activeFetchPromise = (async () => {
+      try {
+        // Запрашиваем данные пользователя
+        const userRes = await fetch(`/api/user?email=${encodeURIComponent(email)}`);
+        if (!userRes.ok) throw new Error('Failed to fetch user');
+        const user = await userRes.json();
+
+        // Запрашиваем задачи
+        const tasksRes = await fetch(`/api/tasks?email=${encodeURIComponent(email)}`);
+        if (!tasksRes.ok) throw new Error('Failed to fetch tasks');
+        const tasksData = await tasksRes.json();
+
+        // Объединяем
+        user.tasks = tasksData.tasks || [];
+        
+        // Сохраняем в кэш
+        userDataCache = user;
+        return user;
+      } catch (e) {
+        console.error("Data fetch error:", e);
+        return null;
+      } finally {
+        // Очищаем активный промис, чтобы в будущем можно было сделать новый запрос
+        activeFetchPromise = null;
+      }
+    })();
+
+    return activeFetchPromise;
   }
 
-  // Функцию очистки кэша вызывай при логауте или сохранении профиля
+  // Эту функцию вызывай при логауте и при Save Profile
   function clearUserCache() {
-    cachedUserData = null;
+    userDataCache = null;
+    activeFetchPromise = null;
   }
 
   async function renderUI() {
