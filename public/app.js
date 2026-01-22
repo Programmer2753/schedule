@@ -1703,6 +1703,7 @@ function applyLang(lang) {
       const userName = document.getElementById('userName');
 
       if (currentUser) {
+        renderUI()
         if (landing) {
           landing.style.display = 'none';
           dashboard.style.display = 'flex';
@@ -3299,7 +3300,7 @@ function applyLang(lang) {
         }
       });
     });
-
+    renderUI()
 
   });
 })();
