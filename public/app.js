@@ -1660,25 +1660,6 @@ function applyLang(lang) {
     });
   }
 
-  async function renderUI() {
-    try {
-        // 1. Обновляем шапку
-        await updateUIForUser();
-
-        // 2. Если есть календарь - обновляем
-        if (document.getElementById('calendarGrid')) {
-            await renderCalendar();
-        }
-
-        // 3. Если выбрана дата - обновляем задачи
-        if (typeof selectedDate !== 'undefined' && selectedDate) {
-            await displayTasksForDate(selectedDate);
-        }
-    } catch (e) {
-        console.error("Ошибка в renderUI:", e);
-    }
-  }
-
   window.addEventListener('DOMContentLoaded', () => {
     const savedLang = localStorage.getItem('site_lang') || 'en';
     applyFullLanguage(savedLang);
@@ -1797,6 +1778,25 @@ function applyLang(lang) {
       } catch (e) {
           console.error('Save profile error:', e);
           showNotification('Error saving profile', 'error');
+      }
+    }
+
+    async function renderUI() {
+      try {
+          // 1. Обновляем шапку
+          await updateUIForUser();
+
+          // 2. Если есть календарь - обновляем
+          if (document.getElementById('calendarGrid')) {
+              await renderCalendar();
+          }
+
+          // 3. Если выбрана дата - обновляем задачи
+          if (typeof selectedDate !== 'undefined' && selectedDate) {
+              await displayTasksForDate(selectedDate);
+          }
+      } catch (e) {
+          console.error("Ошибка в renderUI:", e);
       }
     }
 
