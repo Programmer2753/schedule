@@ -59,16 +59,16 @@ export default async function handler(req, res) {
   if (method === 'PUT') {
     const { id, ...changes } = req.body;
     
-    // Проверка на ID
     if (!id) return res.status(400).json({ error: 'Task ID is required' });
 
     const dbFields = {};
-    if (changes.name) dbFields.title = changes.name;
+    // Сопоставляем имена полей фронтенда с базой данных
+    if (changes.name !== undefined) dbFields.title = changes.name;
     if (changes.description !== undefined) dbFields.description = changes.description;
-    if (changes.status) dbFields.status = changes.status;
-    
-    // Всегда обновляем дату изменения
-    dbFields.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    if (changes.status !== undefined) dbFields.status = changes.status;
+    if (changes.priority !== undefined) dbFields.priority = changes.priority;
+    if (changes.type !== undefined) dbFields.type = changes.type;
+    if (changes.date !== undefined) dbFields.date = changes.date; // ВАЖНО для календаря!
 
     if (Object.keys(dbFields).length === 0) {
         return res.status(400).json({ message: 'No valid fields to update' });
@@ -78,10 +78,17 @@ export default async function handler(req, res) {
       const setClause = Object.keys(dbFields).map(key => `\`${key}\` = ?`).join(', ');
       const values = [...Object.values(dbFields), id];
 
-      await pool.query(`UPDATE tasks SET ${setClause} WHERE id = ?`, values);
+      // Выполняем запрос
+      const [result] = await pool.query(`UPDATE tasks SET ${setClause} WHERE id = ?`, values);
+      
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+
       return res.status(200).json({ message: 'Task updated' });
     } catch (error) {
-      console.error('DATABASE ERROR:', error);
+      console.error('DATABASE ERROR in PUT /tasks:', error);
+      // Если это ошибка соединений, фронтенд увидит код 500
       return res.status(500).json({ error: error.message });
     }
   }
