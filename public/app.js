@@ -1692,28 +1692,54 @@ function applyLang(lang) {
         return `hsl(${hash % 360}, 55%, 45%)`;
     }
 
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+
+    if (saveProfileBtn) {
+      saveProfileBtn.onclick = saveProfile;
+    }
+
     async function saveProfile() {
       const email = localStorage.getItem('currentUser');
-      const newName = document.getElementById('profileNameInput').value;
-      
-      const res = await fetch('/api/update-profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name: newName })
-      });
+      const nameInput = document.getElementById('profileNameInput');
+    
+      if (!nameInput) return;
+      const newName = nameInput.value.trim();
 
-      if (res.ok) {
-        showNotification('Profile updated!', 'success');
-        closeOverlay(modalProfile);
-        // Обновляем данные на странице
-        renderUI(); 
+      if (!newName) {
+        showNotification('Name cannot be empty', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/update-profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name: newName })
+        });
+
+        if (res.ok) {
+          showNotification('Profile updated!', 'success');
+          // Важно: закрываем модалку
+          if (typeof closeOverlay === 'function') {
+            closeOverlay(document.getElementById('modalProfile'));
+          }
+          // Перерисовываем интерфейс, чтобы имя обновилось везде (в шапке и т.д.)
+          if (typeof renderUI === 'function') {
+            renderUI(); 
+          }
+        } else {
+          const err = await res.json();
+          throw new Error(err.error);
+        }
+      } catch (e) {
+        console.error('Save profile error:', e);
+        showNotification('Error saving profile', 'error');
       }
     }
 
     const modalProfile = document.getElementById('modalProfile');
     const closeProfileModal = document.getElementById('closeProfileModal');
     const openProfileBtn = document.getElementById('openProfileBtn');
-    const saveProfileBtn = document.getElementById('saveProfileBtn');
 
     async function openProfileModal() {
       // Добавили await
