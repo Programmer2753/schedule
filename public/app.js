@@ -1133,27 +1133,25 @@ function applyLang(lang) {
   }
 
   async function updateTask(id, changes) {
-    // 1. Сначала отправим запрос на сервер
     try {
-      const res = await fetch('/api/tasks', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, ...changes }),
-      });
+        const res = await fetch('/api/tasks', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, ...changes }),
+        });
 
-      if (!res.ok) {
-        console.error('Failed to update task');
-        showNotification('Error updating task', 'error');
-        return;
-      }
-      
-      // 2. Если успех - можно ничего не делать, так как UI ты обновляешь в других функциях (optimistic update)
-      // Но если хочешь надежности, можно перезагрузить данные:
-      // loadUserTasks(); 
-      
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || 'Server error');
+        }
+
+        // Только после успешного ответа очищаем кэш и обновляем UI
+        clearUserCache(); 
+        // Не вызывай renderUI тут, если ты вызываешь его в конце основной функции, 
+        // лучше обнови только нужный кусочек или дождись завершения.
     } catch (e) {
-      console.error(e);
-      showNotification('Network error', 'error');
+        console.error('Failed to update task:', e);
+        showNotification('Update failed: ' + e.message, 'error');
     }
   }
 
