@@ -945,28 +945,38 @@ function applyLang(lang) {
     return localStorage.getItem('currentUser');
   }
 
+  let cachedUserData = null; // Переменная для хранения данных
+
   async function getCurrentUserData() {
     const email = localStorage.getItem('currentUser');
     if (!email) return null;
 
+    // Если данные уже есть, возвращаем их, а не идем в базу
+    if (cachedUserData && cachedUserData.email === email) {
+      return cachedUserData;
+    }
+
     try {
-      // 1. Грузим профиль
       const userRes = await fetch(`/api/user?email=${encodeURIComponent(email)}`);
-      if (!userRes.ok) return null;
       const userData = await userRes.json();
 
-      // 2. Грузим задачи (чтобы статистика и календарь работали)
       const tasksRes = await fetch(`/api/tasks?email=${encodeURIComponent(email)}`);
       const tasksData = await tasksRes.json();
 
-      // 3. Объединяем, чтобы старый код работал
       userData.tasks = tasksData.tasks || [];
       
+      // Сохраняем в кэш
+      cachedUserData = userData; 
       return userData;
     } catch (e) {
       console.error('Error fetching user data:', e);
       return null;
     }
+  }
+
+  // Функцию очистки кэша вызывай при логауте или сохранении профиля
+  function clearUserCache() {
+    cachedUserData = null;
   }
 
   function updateCurrentUserData(updateFn) {
@@ -1725,6 +1735,8 @@ function applyLang(lang) {
         });
 
         if (res.ok) {
+          clearUserCache();
+          await renderUI();
           showNotification('Profile updated!', 'success');
           // Важно: закрываем модалку
           if (typeof closeOverlay === 'function') {
