@@ -1985,7 +1985,7 @@ function applyLang(lang) {
 
         if (!langName) return;
 
-        if (lang === 'ua') {
+        if (lang === 'uk') {
           langName.textContent = t.profile?.ukrainian || 'Українська';
         } else if (lang === 'en') {
           langName.textContent = t.profile?.english || 'English';
