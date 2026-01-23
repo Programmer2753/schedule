@@ -1099,36 +1099,26 @@ function applyLang(lang) {
     subMenu.onmouseleave = () => subMenu.remove();
   }
 
-  async function saveTask(task) {
-    const userData = await getCurrentUserData(); 
-    if (!userData || !userData.userId) { 
-        showNotification('Please login again', 'error');
-        return;
-    }
-
+  async function updateTask(id, changes) {
     try {
-      const res = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: userData.userId,
-          title: task.title || task.name, // Подстраховка
-          description: task.description || '',
-          status: task.status || 'TO DO',
-          priority: task.priority || 'none',
-          type: task.type || 'task',
-          date: task.date || null
-        }),
-      });
+        const res = await fetch('/api/tasks', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, ...changes }),
+        });
 
-      if (res.ok) {
-        await loadUserTasks(); // Перезагружаем таблицу
-        showNotification('Task saved!', 'success');
-      } else {
-        showNotification('Error saving task', 'error');
-      }
-    } catch (error) {
-      console.error('Save error:', error);
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || 'Server error');
+        }
+
+        // Только после успешного ответа очищаем кэш и обновляем UI
+        clearUserCache(); 
+        // Не вызывай renderUI тут, если ты вызываешь его в конце основной функции, 
+        // лучше обнови только нужный кусочек или дождись завершения.
+    } catch (e) {
+        console.error('Failed to update task:', e);
+        showNotification('Update failed: ' + e.message, 'error');
     }
   }
 
