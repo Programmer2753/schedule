@@ -1,8 +1,7 @@
 import mysql from 'mysql2/promise';
 
-if (!process.env.DB_HOST) {
-  console.error("ОШИБКА: Нет переменных окружения для БД");
-}
+// Логируем попытку подключения (только для отладки)
+console.log("Попытка подключения к базе:", process.env.DB_HOST);
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -10,10 +9,19 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   waitForConnections: true,
-  // ВАЖНО: Ставим 1. Это медленнее, но надежнее для бесплатных баз.
-  connectionLimit: 1, 
+  connectionLimit: 5, 
   queueLimit: 0,
-  connectTimeout: 30000 // Даем 30 сек на подключение
+  connectTimeout: 30000 
 });
+
+// Проверка связи при старте
+pool.getConnection()
+  .then(conn => {
+    console.log("Успешное подключение к БД!");
+    conn.release();
+  })
+  .catch(err => {
+    console.error("ОШИБКА ПОДКЛЮЧЕНИЯ К БД:", err.message);
+  });
 
 export default pool;
