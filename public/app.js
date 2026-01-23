@@ -934,1041 +934,1138 @@ function applyLang(lang) {
   }
 
   function getUsers() {
-
     return JSON.parse(localStorage.getItem('users') || '[]');
-
   }
-
-
 
   function saveUsers(users) {
-
     localStorage.setItem('users', JSON.stringify(users));
-
   }
-
-
 
   function getCurrentUser() {
-
     return localStorage.getItem('currentUser');
-
   }
 
-
+  let userDataCache = null;
+  let activeFetchPromise = null; // Хранит текущий запрос
 
   async function getCurrentUserData() {
-
-    const email = getCurrentUser();
-
+    const email = localStorage.getItem('currentUser');
     if (!email) return null;
 
+    // 1. Если данные уже в памяти — отдаем мгновенно
+    if (userDataCache && userDataCache.email === email) {
+      return userDataCache;
+    }
 
+    // 2. Если запрос УЖЕ идет, но еще не закончился — возвращаем тот же самый Promise.
+    // Это предотвращает дублирование запросов в одну и ту же миллисекунду.
+    if (activeFetchPromise) {
+      return activeFetchPromise;
+    }
 
-    const res = await fetch(`/api/user?email=${encodeURIComponent(email)}`);
+    // 3. Если запроса нет — создаем новый
+    activeFetchPromise = (async () => {
+      try {
+        // Запрашиваем данные пользователя
+        const userRes = await fetch(`/api/user?email=${encodeURIComponent(email)}`);
+        if (!userRes.ok) throw new Error('Failed to fetch user');
+        const user = await userRes.json();
 
-    if (!res.ok) return null;
+        // Запрашиваем задачи
+        const tasksRes = await fetch(`/api/tasks?email=${encodeURIComponent(email)}`);
+        if (!tasksRes.ok) throw new Error('Failed to fetch tasks');
+        const tasksData = await tasksRes.json();
 
+        // Объединяем
+        user.tasks = tasksData.tasks || [];
+        
+        // Сохраняем в кэш
+        userDataCache = user;
+        return user;
+      } catch (e) {
+        console.error("Data fetch error:", e);
+        return null;
+      } finally {
+        // Очищаем активный промис, чтобы в будущем можно было сделать новый запрос
+        activeFetchPromise = null;
+      }
+    })();
 
-
-    return await res.json();
-
+    return activeFetchPromise;
   }
 
-
+  // Эту функцию вызывай при логауте и при Save Profile
+  function clearUserCache() {
+    userDataCache = null;
+    activeFetchPromise = null;
+  }
 
   function updateCurrentUserData(updateFn) {
-
     const users = getUsers();
-
     const email = getCurrentUser();
-
     const index = users.findIndex(u => u.email === email);
-
     if (index === -1) return;
 
-
-
     updateFn(users[index]);
-
     saveUsers(users);
-
   }
-
-
 
   function removeAllMenus() {
-
     document.querySelectorAll('.context-menu, .status-menu, .priority-menu').forEach(m => m.remove());
-
   }
 
-
-
   function showContextMenu(e, taskId) {
-
     e.preventDefault();
-
     removeAllMenus();
 
-
-
     const currentLang = localStorage.getItem('site_lang') || 'en';
-
     const t = i18n[currentLang];
 
-
-
     const menu = document.createElement('div');
-
     menu.className = 'context-menu';
-
-   
-
+    
     menu.style.top = `${e.pageY}px`;
-
     menu.style.left = `${e.pageX}px`;
 
-
-
     menu.innerHTML = `
-
       <div class="menu-item" onclick="handleRename('${taskId}')">
-
-        <span class="menu-icon"><img src="rename_icon.png" alt=""></span>
-
+        <span class="menu-icon"><img src="Images/rename_icon.png" alt=""></span>
         <span class="menu-text">${t.taskActions?.rename || 'Rename'}</span>
-
       </div>
-
-     
-
+      
       <div class="menu-item sub-menu-trigger">
-
-        <span class="menu-icon"><img src="type_icon.png" alt=""></span>
-
+        <span class="menu-icon"><img src="Images/type_icon.png" alt=""></span>
         <span class="menu-text">${t.taskActions?.taskType || 'Task Type'}</span>
-
         <span class="arrow-icon">▶</span>
-
       </div>
-
-     
-
+      
       <div class="menu-item" onclick="handleDuplicate('${taskId}')">
-
-        <span class="menu-icon"><img src="duplicate_icon.png" alt=""></span>
-
+        <span class="menu-icon"><img src="Images/duplicate_icon.png" alt=""></span>
         <span class="menu-text">${t.taskActions?.duplicate || 'Duplicate'}</span>
-
       </div>
-
-     
-
+      
       <div class="menu-item delete-item" onclick="handleDelete('${taskId}')">
-
-        <span class="menu-icon"><img src="delete_icon.png" alt=""></span>
-
+        <span class="menu-icon"><img src="Images/delete_icon.png" alt=""></span>
         <span class="menu-text">${t.taskActions?.delete || 'Delete'}</span>
-
       </div>
-
     `;
-
-
 
     document.body.appendChild(menu);
 
-
-
     const typeTrigger = menu.querySelector('.sub-menu-trigger');
-
     typeTrigger.onmouseenter = (e) => {
-
       console.log('Show task type options for:', taskId);
-
     };
-
-
 
     typeTrigger.onmouseenter = () => {
-
       showTaskTypeSubMenu(typeTrigger, taskId);
-
     };
 
-
-
     menu.querySelectorAll('.menu-item:not(.sub-menu-trigger)').forEach(item => {
-
       item.onmouseenter = () => {
-
         const sub = document.querySelector('.task-type-sub-menu');
-
         if (sub) sub.remove();
-
       };
-
     });
-
   }
 
-
-
   function showTaskTypeSubMenu(parentItem, taskId) {
-
     const oldSub = document.querySelector('.task-type-sub-menu');
-
     if (oldSub) oldSub.remove();
 
-
-
     const currentLang = localStorage.getItem('site_lang') || 'en';
-
     const t = i18n[currentLang];
 
-
-
     const subMenu = document.createElement('div');
-
     subMenu.className = 'task-type-menu task-type-sub-menu';
-
-
 
     const rect = parentItem.getBoundingClientRect();
 
-
-
     subMenu.style.position = 'fixed';
-
     subMenu.style.top = `${rect.top}px`;
-
     subMenu.style.left = `${rect.left - 160}px`;
 
-
-
     const types = ['task', 'milestone', 'form', 'meeting'];
-
-   
-
+    
     subMenu.innerHTML = types.map(type => `
-
       <button class="task-type-sub-menu-btn" onclick="handleUpdateType('${taskId}', '${type}')">
-
         <span class="task-type-icon type-${type}"></span>
-
         ${t.taskTypes?.[type] || type.charAt(0).toUpperCase() + type.slice(1)}
-
       </button>
-
     `).join('');
-
-
 
     document.body.appendChild(subMenu);
 
-
-
     subMenu.onmouseleave = () => subMenu.remove();
-
   }
-
-
 
   async function saveTask(task) {
-
-    console.log('saveTask called', task);
-
-
-
-    const user = getCurrentUser();
-
-    console.log('currentUser', user);
-
-    if (!user) {
-
-      console.error('NO USER');
-
-      showNotification('User not logged in', 'error');
-
-      return;
-
+    const userData = await getCurrentUserData(); 
+    if (!userData || !userData.userId) { 
+        showNotification('Please login again', 'error');
+        return;
     }
 
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userData.userId,
+          title: task.title || task.name, // Подстраховка
+          description: task.description || '',
+          status: task.status || 'TO DO',
+          priority: task.priority || 'none',
+          type: task.type || 'task',
+          date: task.date || null
+        }),
+      });
 
-
-    updateCurrentUserData(user => {
-
-      user.tasks.push(task);
-
-    });
-
+      if (res.ok) {
+        await loadUserTasks(); // Перезагружаем таблицу
+        showNotification('Task saved!', 'success');
+      } else {
+        showNotification('Error saving task', 'error');
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+    }
   }
-
-
 
   async function updateTask(id, changes) {
+    try {
+        const res = await fetch('/api/tasks', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, ...changes }),
+        });
 
-    updateCurrentUserData(user => {
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || 'Server error');
+        }
 
-      const task = user.tasks.find(t => t.id === id);
-
-      if (!task) return;
-
-      Object.assign(task, changes);
-
-    });
-
+        // Только после успешного ответа очищаем кэш и обновляем UI
+        clearUserCache(); 
+        // Не вызывай renderUI тут, если ты вызываешь его в конце основной функции, 
+        // лучше обнови только нужный кусочек или дождись завершения.
+    } catch (e) {
+        console.error('Failed to update task:', e);
+        showNotification('Update failed: ' + e.message, 'error');
+    }
   }
-
-
 
   async function saveUser(email, password) {
-
     const res = await fetch('/api/register', {
-
       method: 'POST',
-
       headers: { 'Content-Type': 'application/json' },
-
       body: JSON.stringify({ email, password }),
-
     });
-
     return await res.json();
-
   }
-
-
 
   async function findUser(email, password) {
-
     const res = await fetch('/api/login', {
-
       method: 'POST',
-
       headers: { 'Content-Type': 'application/json' },
-
       body: JSON.stringify({ email, password }),
-
     });
-
     return await res.json();
-
   }
-
-
 
   // Сохраняем в localStorage только email текущего пользователя (для UI)
-
   function setCurrentUser(email) {
-
     localStorage.setItem('currentUser', email);
-
   }
-
-
 
   function logout() {
-
     localStorage.removeItem('currentUser');
-
   }
-
-
 
   function getEmailName(email) {
-
     return email.split('@')[0];
-
   }
 
-async function loadUserTasks() {
+  function restoreAddRow(row) {
+    row.innerHTML = `<td colspan="7"><button class="add-task-btn">+ Add task</button></td>`;
+    row.classList.remove('active');
+    const input = row.querySelector('.task-name-input');
+    if (input) input.value = '';
 
-    const email = getCurrentUser();
+    const priorityBtn = row.querySelector('.priority-btn');
+    if (priorityBtn) {
+      setPriority(priorityBtn, 'none');
+    }
+  }
 
-    if (!email) return;
+  function moveRowToGroup(row, status) {
+    const tbody = document.querySelector('.table tbody');
+    const group = tbody.querySelector(`.group-row[data-status="${status}"]`);
+    if (!group) return;
 
+    let insertBefore = group.nextElementSibling;
+    while (
+      insertBefore &&
+      !insertBefore.classList.contains('group-row') &&
+      !insertBefore.classList.contains('add-task-row')
+    ) {
+      insertBefore = insertBefore.nextElementSibling;
+    }
 
+    tbody.insertBefore(row, insertBefore);
+  }
 
-    const res = await fetch(`/api/tasks?email=${encodeURIComponent(email)}`);
+  function removeMenus() {
+    document.querySelectorAll('.status-menu').forEach(m => m.remove());
+  }
 
-    if (!res.ok) return;
+  function removeTypeMenu() {
+    document.querySelectorAll('.task-type-menu').forEach(m => m.remove());
+  }
 
+  function removePriorityMenu() {
+    document.querySelectorAll('.priority-menu').forEach(m => m.remove());
+  }
 
+  async function renderCalendar() {
+    const calendarGrid = document.getElementById('calendarGrid');
+    const calendarTitle = document.getElementById('calendarTitle');
+      
+    if (!calendarGrid || !calendarTitle) return;
 
-    const data = await res.json();
+    const lang = localStorage.getItem('site_lang') || 'en';
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
 
-    if (!data.tasks) return;
+    calendarTitle.textContent = `${monthNames[lang][month]} ${year}`;
 
+    // ВАЖНО: Загружаем данные пользователя ОДИН раз перед циклом
+    const user = await getCurrentUserData();
+    const tasks = user ? user.tasks : [];
 
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const prevLastDay = new Date(year, month, 0);
 
-    // Очистить таблицу
+    let firstDayOfWeek = firstDay.getDay();
+    firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
 
-    document.querySelectorAll('.table tbody tr:not(.group-row):not(.add-task-row)').forEach(r => r.remove());
+    const daysInMonth = lastDay.getDate();
+    const daysInPrevMonth = prevLastDay.getDate();
 
+    calendarGrid.innerHTML = '';
 
+    for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+      const day = daysInPrevMonth - i;
+      // Передаем tasks в createDayElement
+      const dayEl = createDayElement(day, 'prev-month', year, month - 1, tasks);
+      calendarGrid.appendChild(dayEl);
+    }
 
-    data.tasks.forEach(task => {
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayEl = createDayElement(day, 'current-month', year, month, tasks);
+      calendarGrid.appendChild(dayEl);
+    }
 
-      const addRow = document.querySelector(`.add-task-row[data-status="${task.status}"]`);
+    const totalCells = calendarGrid.children.length;
+    const remainingCells = 42 - totalCells;
+    for (let day = 1; day <= remainingCells; day++) {
+      const dayEl = createDayElement(day, 'next-month', year, month + 1, tasks);
+      calendarGrid.appendChild(dayEl);
+    }
+  }
 
-      renderTask(task, addRow);
+  function createDayElement(day, className, year, month, tasks) {
+    const dayEl = document.createElement('div');
+    dayEl.className = `calendar-day ${className}`;
+    dayEl.textContent = day;
 
+    const dateStr = formatDate(new Date(year, month, day));
+    dayEl.dataset.date = dateStr;
+
+    const today = new Date();
+    if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate() && className === 'current-month') {
+      dayEl.classList.add('today');
+    }
+
+    if (selectedDate === dateStr) {
+      dayEl.classList.add('selected');
+    }
+
+    // Передаем список задач в функцию фильтрации
+    const tasksForDate = getTasksForDate(dateStr, tasks);
+    
+    if (tasksForDate.length > 0 && className === 'current-month') {
+      const badge = document.createElement('div');
+      badge.className = 'task-count-badge';
+      badge.textContent = tasksForDate.length;
+      dayEl.appendChild(badge);
+    }
+
+    dayEl.addEventListener('click', () => {
+      if (className === 'current-month') {
+        selectDate(dateStr);
+      } else if (className === 'prev-month') {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+        renderCalendar();
+        selectDate(dateStr);
+      } else if (className === 'next-month') {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+        renderCalendar();
+        selectDate(dateStr);
+      }
     });
 
+    return dayEl;
   }
 
+  function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
 
+  // Теперь функция асинхронная
+  async function selectDate(dateStr) {
+    selectedDate = dateStr;
+      
+    document.querySelectorAll('.calendar-day').forEach(day => day.classList.remove('selected'));
+    const selectedDay = document.querySelector(`[data-date="${dateStr}"]`);
+    if (selectedDay) selectedDay.classList.add('selected');
+
+    if (activeTaskIdForDate) {
+        // Ждем обновления задачи
+        await updateTask(activeTaskIdForDate, { date: dateStr });
+          
+        console.log(`Task ${activeTaskIdForDate} updated with date ${dateStr}`);
+          
+        document.getElementById('calendarPopup').style.display = 'none';
+        activeTaskIdForDate = null;
+        
+        // Перерисовываем календарь, чтобы обновились точки
+        renderCalendar();
+    }
+
+    // Вызываем отображение (оно тоже теперь async)
+    await displayTasksForDate(dateStr);
+  }
+
+  // Исправлена логика сравнения дат (MySQL vs JS)
+  function getTasksForDate(dateStr, tasksList) {
+    // Если список задач не передан, пытаемся получить его (но лучше передавать)
+    if (!tasksList) {
+       // Этот блок сработает только в крайнем случае, если tasksList не передан
+       return []; 
+    }
+      
+    return tasksList.filter(task => {
+        if (!task.date) return false;
+        // ВАЖНО: База возвращает 2024-01-20T00:00:00.000Z. Берем только часть до T.
+        const taskDateShort = task.date.toString().split('T')[0];
+        return taskDateShort === dateStr;
+    });
+  }
+
+  // Теперь функция асинхронная, сама грузит свежие данные
+  async function displayTasksForDate(dateStr) {
+    const selectedDateTitle = document.getElementById('selectedDateTitle');
+    const dateTasksList = document.getElementById('dateTasksList');
+    const addTaskForDateBtn = document.getElementById('addTaskForDateBtn');
+      
+    if (!selectedDateTitle || !dateTasksList || !addTaskForDateBtn) return;
+
+    const date = new Date(dateStr);
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const lang = localStorage.getItem('site_lang') || 'en';
+    const locale = lang === 'ua' || lang === 'uk' ? 'uk-UA' : 'en-US';
+    const t = i18n[lang];
+      
+    selectedDateTitle.textContent = date.toLocaleDateString(locale, options);
+    addTaskForDateBtn.style.display = 'flex';
+    addTaskForDateBtn.innerHTML = `<span style="font-size: 20px; margin-right: 4px;">+</span> ${t.calendar?.addTaskBtn || '+ Add task'}`;
+
+    // 1. Грузим свежие данные пользователя
+    const user = await getCurrentUserData();
+    const allTasks = user ? user.tasks : [];
+
+    // 2. Фильтруем с помощью исправленной функции
+    const tasks = getTasksForDate(dateStr, allTasks);
+      
+    if (tasks.length === 0) {
+      const currentLang = localStorage.getItem('site_lang') || 'en';
+      const t = i18n[currentLang];
+      dateTasksList.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📝</div>
+          <p>${t.calendar?.noTasks || 'No tasks for this date'}</p>
+        </div>
+      `;
+    } else {
+      dateTasksList.innerHTML = tasks.map(task => `
+        <div class="date-task-card" data-task-id="${task.id}">
+          <div class="task-card-header">
+            <div class="task-card-status">
+              <span class="task-status-dot ${dotClass(task.status)} type-task"></span>
+              <span class="task-card-title">${task.name}</span>
+            </div>
+            <button class="task-delete-btn" onclick="deleteTask('${task.id}')">✕</button>
+          </div>
+          ${task.description ? `<p class="task-card-description">${task.description}</p>` : ''}
+          <div class="task-card-footer">
+            <span class="status ${statusClass(task.status)}">${task.status}</span>
+            ${task.priority && task.priority !== 'none' ? `<span class="priority-badge-small ${task.priority}">${task.priority}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  function attachStatusMenu(row) {
+    const statusEl = row.querySelector('.status');
+    if (!statusEl) return;
+
+    statusEl.onclick = e => {
+      e.stopPropagation();
+      removeMenus();
+
+      const menu = document.createElement('div');
+      menu.className = 'status-menu';
+      menu.innerHTML = `
+        <div class="status-item" data-status="TO DO"><span class="task-status-dot dot-todo type-task"></span> TO DO</div>
+        <div class="status-item" data-status="IN PROGRESS"><span class="task-status-dot dot-progress type-task"></span> IN PROGRESS</div>
+        <div class="status-item" data-status="DONE"><span class="task-status-dot dot-done type-task"></span> DONE</div>
+      `;
+
+      document.body.appendChild(menu);
+      const r = statusEl.getBoundingClientRect();
+      menu.style.top = r.bottom + 6 + 'px';
+      menu.style.left = r.left + 'px';
+
+      menu.querySelectorAll('.status-item').forEach(item => {
+        item.onclick = () => {
+          setStatus(row, item.dataset.status);
+          removeMenus();
+        };
+      });
+    };
+  }
+
+  function setStatus(row, status) {
+    const badge = row.querySelector('.status');
+    const dot = row.querySelector('.task-status-dot');
+
+    badge.textContent = status;
+    badge.className = 'status ' + statusClass(status);
+
+    dot.classList.remove('dot-todo', 'dot-progress', 'dot-done');
+    dot.classList.add(dotClass(status));
+
+    moveRowToGroup(row, status);
+    updateTask(row.dataset.id, { status });
+  }
+
+  function setTaskType(row, type) {
+    const dot = row.querySelector('.task-status-dot');
+
+    dot.classList.remove(
+      'type-task',
+      'type-milestone',
+      'type-form',
+      'type-meeting'
+    );
+
+    dot.classList.add(`type-${type}`);
+    row.dataset.type = type;
+  }
+
+  function setPriority(cell, priority) {
+    const img = cell.querySelector('img');
+    const label = cell.querySelector('.priority-label');
+    const row = cell.closest('tr');
+
+    cell.dataset.priority = priority;
+
+    const map = {
+      urgent: { icon: 'Images/urgent_icon.png', text: 'Urgent' },
+      high:   { icon: 'Images/high_icon.png',   text: 'High' },
+      normal: { icon: 'Images/normal_icon.png', text: 'Normal' },
+      low:    { icon: 'Images/low_icon.png',    text: 'Low' },
+      none:   { icon: 'Images/priority_icon.png', text: '' }
+    };
+
+    if (img) img.src = map[priority].icon;
+    if (label) label.textContent = map[priority].text;
+
+    updateTask(row.dataset.id, { priority });
+
+    if (row && row.dataset.id) {
+      updateTask(row.dataset.id, { priority });
+    }
+  }
+
+  function formatShortDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function openCalendarForTask(taskId, targetElement) {
+    activeTaskIdForDate = taskId;
+    
+    const calendarView = document.getElementById('calendarView'); 
+    if (!calendarView) return;
+
+    calendarView.style.display = 'flex'; 
+    
+    calendarView.style.position = 'fixed';
+    calendarView.style.top = '50%';
+    calendarView.style.left = '50%';
+    calendarView.style.transform = 'translate(-50%, -50%)';
+    calendarView.style.zIndex = '10000';
+
+    if (typeof renderCalendar === 'function') {
+        renderCalendar(); 
+    }
+  }
+
+  function openQuickCalendar(taskId, targetElement) {
+    activeTaskIdForQuickDate = taskId;
+    const picker = document.getElementById('quickDatePicker');
+    if (!picker) return;
+
+    const rect = targetElement.getBoundingClientRect();
+    picker.style.display = 'block';
+    picker.style.top = `${rect.bottom + window.scrollY + 5}px`;
+    picker.style.left = `${rect.left}px`;
+
+    renderQuickCalendarContent();
+  }
+
+  function applyDateToTask(dateStr) {
+    if (activeTaskIdForQuickDate) {
+        updateTask(activeTaskIdForQuickDate, { date: dateStr });
+
+        const row = document.querySelector(`tr[data-id="${activeTaskIdForQuickDate}"]`);
+        if (row) {
+            const dateBtn = row.querySelector('.date-btn');
+            if (dateBtn) {
+                if (dateStr) {
+                    dateBtn.innerHTML = `<span class="date-text">${formatShortDate(dateStr)}</span>`;
+                } else {
+                    dateBtn.innerHTML = `<img src="Images/date_icon.png">`;
+                }
+            }
+        }
+
+        if (typeof renderCalendar === 'function') {
+            renderCalendar(); 
+        }
+
+        if (typeof showNotification === 'function') {
+            const currentLang = localStorage.getItem('site_lang') || 'en';
+            const t = i18n[currentLang];
+            showNotification(dateStr ? (t.calendar?.dateUpdated || 'Date updated') : (t.calendar?.dateRemoved || 'Date removed'), 'success');
+        }
+    }
+    
+    const picker = document.getElementById('quickDatePicker');
+    if (picker) picker.style.display = 'none';
+  }
+
+  function createTaskRow(task) {
+    const row = document.createElement('tr');
+    row.dataset.id = task.id;
+    row.dataset.status = task.status;
+
+    const dateHtml = task.date 
+        ? `<span class="date-text">${formatShortDate(task.date)}</span>` 
+        : `<img src="Images/date_icon.png">`;
+
+    row.innerHTML = `
+      <td>
+        <div class="name-cell">
+          <span class="task-status-dot ${dotClass(task.status)} type-task"></span>
+          ${task.name}
+        </div>
+      </td>
+      <td class="icon-cell"></td>
+      <td class="icon-cell date-btn">${dateHtml}</td>
+      <td class="icon-cell priority-btn" data-priority="${task.priority || 'none'}">
+        <img src="Images/priority_icon.png">
+        <span class="priority-label"></span>
+      </td>
+      <td><span class="status ${statusClass(task.status)}">${task.status}</span></td>
+      <td class="icon-cell"><img src="Images/comment_icon.png"></td>
+      <td class="icon-cell">
+        <button class="task-menu-btn" style="color: #666; background: none; border: none;">···</button>
+      </td>
+    `;
+    return row;
+  }
+
+  function renderTask(task, addRow) {
+    const row = createTaskRow(task);
+
+    const dateBtn = row.querySelector('.date-btn');
+    if (dateBtn) {
+        dateBtn.onclick = (e) => {
+            e.stopPropagation();
+            openQuickCalendar(task.id, dateBtn); 
+        };
+    }
+
+    if (addRow) {
+        addRow.parentNode.insertBefore(row, addRow);
+    }
+
+    attachStatusMenu(row);
+    setTaskType(row, task.type || 'task');
+
+    const priorityCell = row.querySelector('.priority-btn');
+    if (priorityCell) {
+        setPriority(priorityCell, task.priority || 'none');
+    }
+
+    row.oncontextmenu = (e) => showContextMenu(e, task.id);
+    
+    const menuBtn = row.querySelector('.task-menu-btn');
+    if (menuBtn) {
+        menuBtn.onclick = (e) => {
+            e.stopPropagation();
+            showContextMenu(e, task.id);
+        };
+    }
+  }
+
+  async function loadUserTasks() {
+    const email = getCurrentUser();
+    if (!email) return;
+
+    const res = await fetch(`/api/tasks?email=${encodeURIComponent(email)}`);
+    if (!res.ok) return;
+
+    const data = await res.json();
+    if (!data.tasks) return;
+
+    // Очистить таблицу
+    document.querySelectorAll('.table tbody tr:not(.group-row):not(.add-task-row)').forEach(r => r.remove());
+
+    data.tasks.forEach(task => {
+      const addRow = document.querySelector(`.add-task-row[data-status="${task.status}"]`);
+      renderTask(task, addRow);
+    });
+  }
 
   window.addEventListener('DOMContentLoaded', () => {
-
     const savedLang = localStorage.getItem('site_lang') || 'en';
-
     applyFullLanguage(savedLang);
-
     const header = $('.home-header');
-
     const modalLog = $('.modal-overlay-log');
-
     const modalStart = $('.modal-overlay-start');
-
     const modalReset = $('.reset-password');
-
     const btnStart = $('.btn-start');
-
     const btnHero = $('.hero-btn');
-
     const heroSection = $('.hero-section')
-
     const btnLogin = $('.login');
-
     const userInfo = $('#userInfo');
-
     const authButtons = $('#authButtons');
-
     const userName = $('#userName');
-
     const logoutBtn = $('#logoutBtn');
-
     const footer = $('.footer');
-
     const avatarLetter = document.getElementById('avatarLetter');
-
     const userAvatar = document.getElementById('userAvatar');
 
-
-
-    function updateUIForUser() {
-
+    async function updateUIForUser() { // Добавили async
       const currentUser = getCurrentUser();
-
       const landing = document.getElementById('landingPage');
-
-      const about = document.getElementById('aboutPage')
-
+      const about = document.getElementById('aboutPage');
       const dashboard = document.getElementById('dashboardPage');
-
-
+      const userInfo = document.getElementById('userInfo'); // Убедись, что userInfo определен
+      const userName = document.getElementById('userName');
 
       if (currentUser) {
-
         if (landing) {
-
           landing.style.display = 'none';
-
           dashboard.style.display = 'flex';
-
         }
-
         if (about) {
-
-          window.location.href = '/index.html'
-
+          window.location.href = '/index.html';
         }
-
-     
-
+      
         if (userInfo) {
-
           userInfo.style.display = 'flex';
-
-          const userData = getCurrentUserData();
-
+          
+          // ВАЖНО: Ждем данные от сервера
+          const userData = await getCurrentUserData(); 
+          
+          // Теперь displayName возьмет имя из базы (profile.name)
           const displayName = userData?.profile?.name || getEmailName(currentUser);
-
-         
-
+          
           if (userName) userName.textContent = displayName;
-
+          
           if (avatarLetter && userAvatar) {
-
             avatarLetter.textContent = displayName[0].toUpperCase();
-
             const avatarColor = userData?.profile?.avatarColor || generateColor(displayName);
-
             userAvatar.style.background = avatarColor;
-
           }
-
         }
-
       } else {
-
         if (landing) {
-
           landing.style.display = 'flex';
-
           dashboard.style.display = 'none';
-
           if (userInfo) userInfo.style.display = 'none';
-
         }
-
       }
-
     }
-
-
 
     function generateColor(str) {
-
         let hash = 0;
-
         for (let i = 0; i < str.length; i++) {
-
             hash = str.charCodeAt(i) + ((hash << 5) - hash);
-
         }
-
         return `hsl(${hash % 360}, 55%, 45%)`;
-
     }
-
-
-
-    const modalProfile = document.getElementById('modalProfile');
-
-    const closeProfileModal = document.getElementById('closeProfileModal');
-
-    const openProfileBtn = document.getElementById('openProfileBtn');
 
     const saveProfileBtn = document.getElementById('saveProfileBtn');
 
+    if (saveProfileBtn) {
+      saveProfileBtn.onclick = saveProfile;
+    }
 
+    async function saveProfile() {
+      const email = localStorage.getItem('currentUser');
+      const nameInput = document.getElementById('profileNameInput');
 
-    function openProfileModal() {
+      if (!nameInput) return;
+      const newName = nameInput.value.trim();
 
-      const user = getCurrentUserData();
+      if (!newName) {
+          showNotification('Name cannot be empty', 'error');
+          return;
+      }
 
+      try {
+          const res = await fetch('/api/update-profile', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, name: newName })
+          });
+
+          if (res.ok) {
+              // Успех! Не пытаемся читать res.json() как ошибку
+              showNotification('Profile updated!', 'success');
+              
+              // 1. Очищаем старые данные из кэша
+              clearUserCache();
+              
+              // 2. Закрываем модалку
+              if (typeof closeOverlay === 'function') {
+                  closeOverlay(document.getElementById('modalProfile'));
+              }
+              
+              // 3. Обновляем интерфейс
+              await renderUI(); 
+              
+          } else {
+              // Ошибка - вот тут читаем текст ошибки
+              const err = await res.json();
+              throw new Error(err.error || 'Update failed');
+          }
+      } catch (e) {
+          console.error('Save profile error:', e);
+          showNotification('Error saving profile', 'error');
+      }
+    }
+
+    async function renderUI() {
+      try {
+          // 1. Обновляем шапку
+          await updateUIForUser();
+
+          // 2. Если есть календарь - обновляем
+          if (document.getElementById('calendarGrid')) {
+              await renderCalendar();
+          }
+
+          // 3. Если выбрана дата - обновляем задачи
+          if (typeof selectedDate !== 'undefined' && selectedDate) {
+              await displayTasksForDate(selectedDate);
+          }
+      } catch (e) {
+          console.error("Ошибка в renderUI:", e);
+      }
+    }
+
+    const modalProfile = document.getElementById('modalProfile');
+    const closeProfileModal = document.getElementById('closeProfileModal');
+    const openProfileBtn = document.getElementById('openProfileBtn');
+
+    async function openProfileModal() {
+      // Добавили await
+      const user = await getCurrentUserData(); 
       if (!user) return;
 
-
-
       const profileName = document.getElementById('profileName');
-
       const profileEmail = document.getElementById('profileEmail');
-
       const profileLetter = document.getElementById('profileLetter');
-
       const profileAvatarLarge = document.getElementById('profileAvatarLarge');
-
       const profileNameInput = document.getElementById('profileNameInput');
-
       const profileRegistered = document.getElementById('profileRegistered');
-
-     
-
+      
+      // Теперь tasks подгружаются корректно
       const totalTasks = user.tasks ? user.tasks.length : 0;
-
       const completedTasks = user.tasks ? user.tasks.filter(t => t.status === 'DONE').length : 0;
-
       const productivity = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-
-
       const displayName = user.profile?.name || user.email.split('@')[0];
-
-     
-
+      
       if (profileName) profileName.textContent = displayName;
-
       if (profileEmail) profileEmail.textContent = user.email;
-
       if (profileNameInput) profileNameInput.value = displayName;
-
-     
-
+      
       if (profileLetter && profileAvatarLarge) {
-
         profileLetter.textContent = displayName[0].toUpperCase();
-
         const color = user.profile?.avatarColor || generateColor(displayName);
-
         profileAvatarLarge.style.background = color;
-
       }
-
-
 
       if (profileRegistered && user.registeredAt) {
-
         const date = new Date(user.registeredAt);
-
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
-
-        const lang = localStorage.getItem('site_lang') || 'uk';
-
+        const lang = localStorage.getItem('site_lang') || 'en';
         const locale = lang === 'ua' || lang === 'uk' ? 'uk-UA' : 'en-US';
-
         profileRegistered.textContent = date.toLocaleDateString(locale, options);
-
       }
 
+      // Обновляем статистику в модалке
+      const totalEl = document.getElementById('profileTotalTasks');
+      const completedEl = document.getElementById('profileCompletedTasks');
+      const prodEl = document.getElementById('profileProductivity');
 
-
-      document.getElementById('profileTotalTasks').textContent = totalTasks;
-
-      document.getElementById('profileCompletedTasks').textContent = completedTasks;
-
-      document.getElementById('profileProductivity').textContent = productivity + '%';
-
-
+      if (totalEl) totalEl.textContent = totalTasks;
+      if (completedEl) completedEl.textContent = completedTasks;
+      if (prodEl) prodEl.textContent = productivity + '%';
 
       openOverlay(modalProfile);
-
     }
-
-
 
     if (openProfileBtn) {
-
       openProfileBtn.addEventListener('click', (e) => {
-
         e.stopPropagation();
-
         const userMenu = document.getElementById('userMenu');
-
         if (userMenu) userMenu.classList.remove('open');
-
         openProfileModal();
-
       });
-
     }
-
-
 
     if (closeProfileModal) {
-
       closeProfileModal.addEventListener('click', () => {
-
         closeOverlay(modalProfile);
-
       });
-
     }
-
-
 
     if (modalProfile) {
-
       modalProfile.addEventListener('click', (e) => {
-
         if (e.target === modalProfile) {
-
           closeOverlay(modalProfile);
-
         }
-
       });
-
     }
-
-
 
     if (saveProfileBtn) {
-
       saveProfileBtn.addEventListener('click', () => {
-
         const profileNameInput = document.getElementById('profileNameInput');
-
         const newName = profileNameInput?.value.trim();
-
         const currentLang = localStorage.getItem('site_lang') || 'en';
-
         const t = i18n[currentLang];
-
-       
-
+        
         if (!newName) {
-
           showNotification(t.profile?.enterName || 'Enter profile name', 'error');
-
           return;
-
         }
-
-
 
         updateCurrentUserData(user => {
-
           if (!user.profile) user.profile = {};
-
           user.profile.name = newName;
-
           user.profile.avatarColor = generateColor(newName);
-
         });
 
-
-
         const user = getCurrentUserData();
-
         const userName = document.getElementById('userName');
-
         const avatarLetter = document.getElementById('avatarLetter');
-
         const userAvatar = document.getElementById('userAvatar');
-
-       
-
+        
         if (userName) userName.textContent = newName;
-
         if (avatarLetter) avatarLetter.textContent = newName[0].toUpperCase();
-
         if (userAvatar) userAvatar.style.background = generateColor(newName);
 
-
-
         closeOverlay(modalProfile);
-
+        saveProfile(modalProfile);
         showNotification(t.profile?.profileUpdated || 'Profile updated!', 'success');
-
       });
-
     }
 
-
-
     const languageDropdownBtn = document.getElementById('languageDropdownBtn');
-
     const languageDropdownMenu = document.getElementById('languageDropdownMenu');
-
     const selectedLangFlag = document.getElementById('selectedLangFlag');
-
     const selectedLangName = document.getElementById('selectedLangName');
 
-
-
     if (languageDropdownBtn && languageDropdownMenu) {
-
       languageDropdownBtn.addEventListener('click', (e) => {
-
         e.stopPropagation();
-
         languageDropdownBtn.classList.toggle('open');
-
         languageDropdownMenu.classList.toggle('open');
-
       });
-
-
 
       document.addEventListener('click', (e) => {
-
         if (!e.target.closest('.language-dropdown')) {
-
           languageDropdownBtn.classList.remove('open');
-
           languageDropdownMenu.classList.remove('open');
-
         }
-
       });
 
-
-
       const languageOptions = document.querySelectorAll('.language-option');
-
       languageOptions.forEach(option => {
-
         option.addEventListener('click', () => {
-
           const selectedLang = option.dataset.lang;
-
           const flag = option.querySelector('.lang-flag')?.textContent || '';
-
           const name = option.querySelector('.lang-name')?.textContent || '';
 
-
-
           if (selectedLangFlag) selectedLangFlag.textContent = flag;
-
           if (selectedLangName) selectedLangName.textContent = name;
 
-
-
           languageDropdownBtn.classList.remove('open');
-
           languageDropdownMenu.classList.remove('open');
-
-
 
           applyFullLanguage(selectedLang);
 
-
-
           updateCurrentUserData(user => {
-
             if (!user.profile) user.profile = {};
-
             user.profile.language = selectedLang;
-
           });
 
-
-
           const aiChat = document.getElementById('aiChat');
-
           if (aiChat) {
-
             aiChat.innerHTML = '';
-
             initAIGreeting();
-
           }
 
-
-
           const t = i18n[selectedLang];
-
           showNotification(t.languageChanged || 'Language changed', 'success');
-
         });
-
       });
-
     }
 
-
-
     function initLanguageDropdown() {
-
       const user = getCurrentUserData();
-
       const currentLang =
-
         user?.profile?.language ||
-
         localStorage.getItem('site_lang') ||
-
         'en';
-
-
 
       const t = i18n[currentLang];
 
-
-
       const langData = {
-
         uk: { flag: '🇺🇦', name: t.profile?.ukrainian || 'Українська' },
-
         en: { flag: '🇬🇧', name: t.profile?.english || 'English' },
-
         ru: { flag: '🇷🇺', name: t.profile?.russian || 'Русский' }
-
       };
 
-
-
       if (selectedLangFlag && selectedLangName && langData[currentLang]) {
-
         selectedLangFlag.textContent = langData[currentLang].flag;
-
         selectedLangName.textContent = langData[currentLang].name;
-
       }
 
-
-
       const languageOptions = document.querySelectorAll('.language-option');
-
       languageOptions.forEach(option => {
-
         const lang = option.dataset.lang;
-
         const langName = option.querySelector('.lang-name');
-
-
 
         if (!langName) return;
 
-
-
         if (lang === 'uk') {
-
           langName.textContent = t.profile?.ukrainian || 'Українська';
-
         } else if (lang === 'en') {
-
           langName.textContent = t.profile?.english || 'English';
-
         } else if (lang === 'ru') {
-
           langName.textContent = t.profile?.russian || 'Русский';
-
         }
-
       });
-
-
 
       applyFullLanguage(currentLang);
-
     }
-
     if (modalProfile) {
-
       const observer = new MutationObserver((mutations) => {
-
         mutations.forEach((mutation) => {
-
           if (mutation.attributeName === 'style') {
-
             const display = modalProfile.style.display;
-
             if (display === 'flex') {
-
               initLanguageDropdown();
-
             }
-
           }
-
         });
-
       });
-
-     
-
+      
       observer.observe(modalProfile, { attributes: true });
-
     }
-
-
 
     updateUIForUser(true);
 
-
-
     const userEmail = getCurrentUser();
-
     if (userEmail) {
-
       loadUserTasks();
-
     }
-
-
 
     if (logoutBtn) {
-
       logoutBtn.addEventListener('click', () => {
-
         logout();
-
         updateUIForUser();
-
         const t = i18n[localStorage.getItem('site_lang') || 'en'];
-
         showNotification(t.notifications.loggedOut, 'info');
-
       });
-
     }
-
-
 
     try {
-
       if (header) header.style.display = 'flex';
-
       if (modalLog) modalLog.style.display = 'none';
-
       if (modalStart) modalStart.style.display = 'none';
-
       if (modalReset) modalReset.style.display = 'none';
-
     } catch(e){
-
       console.warn('init display error', e);
-
     }
-
-
 
     function openOverlay(overlay){
-
       if (!overlay) return;
-
       overlay.style.display = 'flex';
-
-      const first = overlay.querySelector('input, button, a, [tabindex]');
-
+      const first = overlay.querySelector('input, button, a, [tabindex]'); 
       if (first) first.focus();
-
       document.body.style.overflow = 'hidden';
-
     }
-
     function closeOverlay(overlay){
-
       if (!overlay) return;
-
       overlay.style.display = 'none';
-
       document.body.style.overflow = '';
-
     }
-
-
 
     if (btnStart) {
-
       btnStart.addEventListener('click', (e) => {
-
         e.preventDefault();
-
         openOverlay(modalStart);
-
       });
-
     }
-
     if (btnHero) {
-
       btnHero.addEventListener('click', (e) => {
-
         e.preventDefault();
-
         openOverlay(modalStart);
-
       });
-
     }
-
     if (btnLogin) {
-
       btnLogin.addEventListener('click', (e) => {
-
         e.preventDefault();
-
         openOverlay(modalLog);
-
       });
-
     }
 
     $all('.close-btn').forEach(cb => {
@@ -3209,6 +3306,8 @@ async function loadUserTasks() {
         }
       });
     });
+
+    renderUI()
 
   });
 })();
