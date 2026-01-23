@@ -925,11 +925,6 @@ function applyLang(lang) {
     };
   }
 
-  function getCurrentLang() {
-    const lang = localStorage.getItem('site_lang') || 'en';
-    return i18n && i18n[lang] ? lang : 'en';
-  }
-
   function statusClass(s) {
     return s === 'DONE' ? 'done' : s === 'IN PROGRESS' ? 'progress' : 'todo';
   }
@@ -2700,8 +2695,8 @@ function applyLang(lang) {
 
     function generateAIResponse(userMessage) {
       const lowerMsg = userMessage.toLowerCase().trim();
-      const lang = getCurrentLang();
-      const t = i18n[lang];
+      const currentLang = localStorage.getItem('site_lang') || 'en';
+      const t = i18n[currentLang];
       
       const hasWords = (words) => words.some(word => lowerMsg.includes(word));
       
@@ -2881,8 +2876,8 @@ function applyLang(lang) {
       const aiChat = document.getElementById('aiChat');
       if (!aiChat) return;
       
-      const lang = getCurrentLang();
-      const t = i18n[lang];
+      const currentLang = localStorage.getItem('site_lang') || 'uk';
+      const t = i18n[currentLang];
       
       const hasMessages = aiChat.children.length > 0;
       if (!hasMessages) {
