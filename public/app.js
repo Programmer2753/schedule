@@ -1145,12 +1145,7 @@ function applyLang(lang) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id, ...changes }),
         });
-
-        if (!res.ok) {
-            const errData = await res.json();
-            throw new Error(errData.error || 'Server error');
-        }
-
+        
         // 2. ВМЕСТО сброса кэша, обновляем его вручную!
         // Это спасает от ошибки 'max_user_connections'
         if (userDataCache && userDataCache.tasks) {
@@ -1160,7 +1155,14 @@ function applyLang(lang) {
                 userDataCache.tasks[taskIndex] = { ...userDataCache.tasks[taskIndex], ...changes };
             }
         }
+
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || 'Server error');
+        }
+
         
+
     } catch (e) {
         console.error('Failed to update task:', e);
         showNotification('Update failed: ' + e.message, 'error');
