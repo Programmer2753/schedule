@@ -1238,7 +1238,11 @@ function applyLang(lang) {
       
     if (!calendarGrid || !calendarTitle) return;
 
-    const lang = localStorage.getItem('site_lang') || 'en';
+    let lang = localStorage.getItem('site_lang') || 'en';
+    if (!monthNames[lang]) {
+      lang = 'en';
+    }
+
     const year = currentCalendarDate.getFullYear();
     const month = currentCalendarDate.getMonth();
 
