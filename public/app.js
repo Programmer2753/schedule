@@ -1139,6 +1139,7 @@ function applyLang(lang) {
 
   async function updateTask(id, changes) {
     try {
+        // 1. Отправляем изменения на сервер
         const res = await fetch('/api/tasks', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -1150,13 +1151,24 @@ function applyLang(lang) {
             throw new Error(errData.error || 'Server error');
         }
 
-        // Только после успешного ответа очищаем кэш и обновляем UI
-        clearUserCache(); 
-        // Не вызывай renderUI тут, если ты вызываешь его в конце основной функции, 
-        // лучше обнови только нужный кусочек или дождись завершения.
+        // 2. ВМЕСТО сброса кэша, обновляем его вручную!
+        // Это спасает от ошибки 'max_user_connections'
+        if (userDataCache && userDataCache.tasks) {
+            const taskIndex = userDataCache.tasks.findIndex(t => t.id == id); // Используем == для надежности (строка/число)
+            if (taskIndex !== -1) {
+                // Обновляем поля задачи в памяти
+                userDataCache.tasks[taskIndex] = { ...userDataCache.tasks[taskIndex], ...changes };
+            }
+        }
+
+        // 3. Перерисовываем интерфейс без запросов к сети
+        await renderUI(); 
+
     } catch (e) {
         console.error('Failed to update task:', e);
         showNotification('Update failed: ' + e.message, 'error');
+        // Если ошибка критическая, можно сбросить кэш, чтобы вернуть актуальное состояние
+        // clearUserCache(); 
     }
   }
 
@@ -1649,21 +1661,18 @@ function applyLang(lang) {
   }
 
   async function loadUserTasks() {
-    const email = getCurrentUser();
-    if (!email) return;
+    const user = await getCurrentUserData(); // Используем общий кэш!
+    if (!user || !user.tasks) return;
 
-    const res = await fetch(`/api/tasks?email=${encodeURIComponent(email)}`);
-    if (!res.ok) return;
-
-    const data = await res.json();
-    if (!data.tasks) return;
-
-    // Очистить таблицу
+    // Очистить таблицу (кроме заголовков и строк добавления)
     document.querySelectorAll('.table tbody tr:not(.group-row):not(.add-task-row)').forEach(r => r.remove());
 
-    data.tasks.forEach(task => {
-      const addRow = document.querySelector(`.add-task-row[data-status="${task.status}"]`);
-      renderTask(task, addRow);
+    // Рендерим задачи
+    user.tasks.forEach(task => {
+        const addRow = document.querySelector(`.add-task-row[data-status="${task.status}"]`);
+        if (addRow) {
+            renderTask(task, addRow);
+        }
     });
   }
 
@@ -1790,18 +1799,34 @@ function applyLang(lang) {
 
     async function renderUI() {
       try {
-          // 1. Обновляем шапку
-          await updateUIForUser();
+          // 1. Загружаем данные ОДИН раз для всех
+          const userData = await getCurrentUserData();
+          
+          // Если данных нет (пользователь не залогинен), выходим или чистим UI
+          if (!userData) return;
 
-          // 2. Если есть календарь - обновляем
+          // 2. Обновляем шапку (передаем данные явно, чтобы updateUIForUser не качал их сам)
+          // Примечание: функцию updateUIForUser чуть ниже тоже поправим
+          await updateUIForUser(); 
+          
+          // 3. Обновляем таблицу задач (теперь она берет данные из кэша)
+          await loadUserTasks();
+
+          // 4. Если есть календарь - обновляем
           if (document.getElementById('calendarGrid')) {
               await renderCalendar();
           }
 
-          // 3. Если выбрана дата - обновляем задачи
+          // 5. Если открыт быстрый календарь - обновляем
+          if (document.getElementById('quickCalendarGrid')) {
+              await renderQuickCalendarContent();
+          }
+
+          // 6. Если выбрана дата в попапе - обновляем задачи
           if (typeof selectedDate !== 'undefined' && selectedDate) {
               await displayTasksForDate(selectedDate);
           }
+          
       } catch (e) {
           console.error("Ошибка в renderUI:", e);
       }
@@ -2020,11 +2045,12 @@ function applyLang(lang) {
       observer.observe(modalProfile, { attributes: true });
     }
 
-    updateUIForUser(true);
-
     const userEmail = getCurrentUser();
     if (userEmail) {
-      loadUserTasks();
+      // renderUI вызовет и updateUIForUser, и loadUserTasks внутри себя
+      renderUI(); 
+    } else {
+      updateUIForUser(); // Только обновить шапку для гостя
     }
 
     if (logoutBtn) {
