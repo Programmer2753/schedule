@@ -954,8 +954,16 @@ function applyLang(lang) {
   let activeFetchPromise = null; // Хранит текущий запрос
 
   async function getCurrentUserData() {
-    const email = localStorage.getItem('currentUser');
-    if (!email) return null;
+    const raw = localStorage.getItem('currentUser');
+    if (!raw) return null;
+
+    // защита от "u", "u:1" и прочего мусора
+    if (!raw.includes('@')) {
+      console.warn('Invalid currentUser value:', raw);
+      return null;
+    }
+
+    const email = raw;
 
     // 1. Если данные уже в памяти — отдаем мгновенно
     if (userDataCache && userDataCache.email === email) {
@@ -975,6 +983,12 @@ function applyLang(lang) {
         const userRes = await fetch(`/api/user?email=${encodeURIComponent(email)}`);
         if (!userRes.ok) throw new Error('Failed to fetch user');
         const user = await userRes.json();
+
+        if (!user || !user.email) {
+          throw new Error('Invalid user data');
+        }
+
+        if (!email) return user;
 
         // Запрашиваем задачи
         const tasksRes = await fetch(`/api/tasks?email=${encodeURIComponent(email)}`);
