@@ -1973,7 +1973,7 @@ function applyLang(lang) {
       const t = i18n[currentLang];
 
       const langData = {
-        uk: { flag: '🇺🇦', name: t.profile?.ukrainian || 'Українська' },
+        ua: { flag: '🇺🇦', name: t.profile?.ukrainian || 'Українська' },
         en: { flag: '🇬🇧', name: t.profile?.english || 'English' },
         ru: { flag: '🇷🇺', name: t.profile?.russian || 'Русский' }
       };
