@@ -1139,7 +1139,15 @@ function applyLang(lang) {
 
   async function updateTask(id, changes) {
     try {
-        // 1. Отправляем изменения на сервер
+        // 1. Сначала обновляем локальный кэш (чтобы интерфейс реагировал мгновенно)
+        if (typeof userDataCache !== 'undefined' && userDataCache && userDataCache.tasks) {
+            const taskIndex = userDataCache.tasks.findIndex(t => t.id == id);
+            if (taskIndex !== -1) {
+                userDataCache.tasks[taskIndex] = { ...userDataCache.tasks[taskIndex], ...changes };
+            }
+        }
+
+        // 2. Отправляем запрос на сервер
         const res = await fetch('/api/tasks', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -1147,28 +1155,29 @@ function applyLang(lang) {
         });
 
         if (!res.ok) {
-            const errData = await res.json();
-            throw new Error(errData.error || 'Server error');
-        }
-
-        // 2. ВМЕСТО сброса кэша, обновляем его вручную!
-        // Это спасает от ошибки 'max_user_connections'
-        if (userDataCache && userDataCache.tasks) {
-            const taskIndex = userDataCache.tasks.findIndex(t => t.id == id); // Используем == для надежности (строка/число)
-            if (taskIndex !== -1) {
-                // Обновляем поля задачи в памяти
-                userDataCache.tasks[taskIndex] = { ...userDataCache.tasks[taskIndex], ...changes };
+            // Если сервер перегружен (500), мы не ломаем весь JS, а просто пишем в консоль
+            const errText = await res.text();
+            console.warn('Server sync warning:', errText);
+            
+            if (errText.includes('max_user_connections')) {
+                // Не спамим уведомлениями пользователя, сервер просто занят
+                return; 
             }
+            throw new Error('Sync failed');
         }
 
-        // 3. Перерисовываем интерфейс без запросов к сети
-        await renderUI(); 
+        // 3. Безопасный вызов перерисовки
+        if (typeof window.renderUI === 'function') {
+            await window.renderUI();
+        } else if (typeof renderUI === 'function') {
+            await renderUI();
+        } else {
+            console.warn('renderUI function not found yet, skipping UI refresh');
+        }
 
     } catch (e) {
-        console.error('Failed to update task:', e);
-        showNotification('Update failed: ' + e.message, 'error');
-        // Если ошибка критическая, можно сбросить кэш, чтобы вернуть актуальное состояние
-        // clearUserCache(); 
+        console.error('Update task safe error:', e);
+        // Не выбрасываем критическую ошибку, чтобы скрипт жил дальше
     }
   }
 
