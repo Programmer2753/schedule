@@ -878,7 +878,7 @@ function applyLang(lang) {
     }
 
     // ВАЖНО: Добавили await, чтобы получить реальные данные
-    const user = currentUser;
+    const user = await getCurrentUserData();
     
     const today = new Date();
     for (let d = 1; d <= lastDay.getDate(); d++) {
@@ -954,16 +954,8 @@ function applyLang(lang) {
   let activeFetchPromise = null; // Хранит текущий запрос
 
   async function getCurrentUserData() {
-    const raw = localStorage.getItem('currentUser');
-    if (!raw) return null;
-
-    // защита от "u", "u:1" и прочего мусора
-    if (!raw.includes('@')) {
-      console.warn('Invalid currentUser value:', raw);
-      return null;
-    }
-
-    const email = raw;
+    const email = localStorage.getItem('currentUser');
+    if (!email) return null;
 
     // 1. Если данные уже в памяти — отдаем мгновенно
     if (userDataCache && userDataCache.email === email) {
@@ -983,12 +975,6 @@ function applyLang(lang) {
         const userRes = await fetch(`/api/user?email=${encodeURIComponent(email)}`);
         if (!userRes.ok) throw new Error('Failed to fetch user');
         const user = await userRes.json();
-
-        if (!user || !user.email) {
-          throw new Error('Invalid user data');
-        }
-
-        if (!email) return user;
 
         // Запрашиваем задачи
         const tasksRes = await fetch(`/api/tasks?email=${encodeURIComponent(email)}`);
@@ -1263,7 +1249,8 @@ function applyLang(lang) {
     calendarTitle.textContent = `${monthNames[lang][month]} ${year}`;
 
     // ВАЖНО: Загружаем данные пользователя ОДИН раз перед циклом
-    const tasks = currentUser?.tasks || [];
+    const user = await getCurrentUserData();
+    const tasks = user ? user.tasks : [];
 
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
@@ -1408,7 +1395,8 @@ function applyLang(lang) {
     addTaskForDateBtn.innerHTML = `<span style="font-size: 20px; margin-right: 4px;">+</span> ${t.calendar?.addTaskBtn || '+ Add task'}`;
 
     // 1. Грузим свежие данные пользователя
-    const allTasks = currentUser?.tasks || [];
+    const user = await getCurrentUserData();
+    const allTasks = user ? user.tasks : [];
 
     // 2. Фильтруем с помощью исправленной функции
     const tasks = getTasksForDate(dateStr, allTasks);
@@ -1679,11 +1667,8 @@ function applyLang(lang) {
     });
   }
 
-  let currentUserData = null;
-
-  window.addEventListener('DOMContentLoaded', async () => {
+  window.addEventListener('DOMContentLoaded', () => {
     const savedLang = localStorage.getItem('site_lang') || 'en';
-    currentUserData = await getCurrentUserData();
     applyFullLanguage(savedLang);
     const header = $('.home-header');
     const modalLog = $('.modal-overlay-log');
@@ -1758,25 +1743,6 @@ function applyLang(lang) {
       saveProfileBtn.onclick = saveProfile;
     }
 
-    async function renderUI() {
-      try {
-          // 1. Обновляем шапку
-          await updateUIForUser();
-
-          // 2. Если есть календарь - обновляем
-          if (document.getElementById('calendarGrid')) {
-              await renderCalendar();
-          }
-
-          // 3. Если выбрана дата - обновляем задачи
-          if (typeof selectedDate !== 'undefined' && selectedDate) {
-              await displayTasksForDate(selectedDate);
-          }
-      } catch (e) {
-          console.error("Ошибка в renderUI:", e);
-      }
-    }
-
     async function saveProfile() {
       const email = localStorage.getItem('currentUser');
       const nameInput = document.getElementById('profileNameInput');
@@ -1819,6 +1785,25 @@ function applyLang(lang) {
       } catch (e) {
           console.error('Save profile error:', e);
           showNotification('Error saving profile', 'error');
+      }
+    }
+
+    async function renderUI() {
+      try {
+          // 1. Обновляем шапку
+          await updateUIForUser();
+
+          // 2. Если есть календарь - обновляем
+          if (document.getElementById('calendarGrid')) {
+              await renderCalendar();
+          }
+
+          // 3. Если выбрана дата - обновляем задачи
+          if (typeof selectedDate !== 'undefined' && selectedDate) {
+              await displayTasksForDate(selectedDate);
+          }
+      } catch (e) {
+          console.error("Ошибка в renderUI:", e);
       }
     }
 
