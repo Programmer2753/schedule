@@ -1160,10 +1160,7 @@ function applyLang(lang) {
                 userDataCache.tasks[taskIndex] = { ...userDataCache.tasks[taskIndex], ...changes };
             }
         }
-
-        // 3. Перерисовываем интерфейс без запросов к сети
-        await renderUI(); 
-
+        
     } catch (e) {
         console.error('Failed to update task:', e);
         showNotification('Update failed: ' + e.message, 'error');
