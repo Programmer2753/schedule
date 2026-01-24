@@ -1676,26 +1676,10 @@ function applyLang(lang) {
     });
   }
 
-  window.addEventListener('DOMContentLoaded', () => {
-    const savedLang = localStorage.getItem('site_lang') || 'en';
-    applyFullLanguage(savedLang);
-    const header = $('.home-header');
-    const modalLog = $('.modal-overlay-log');
-    const modalStart = $('.modal-overlay-start');
-    const modalReset = $('.reset-password');
-    const btnStart = $('.btn-start');
-    const btnHero = $('.hero-btn');
-    const heroSection = $('.hero-section')
-    const btnLogin = $('.login');
-    const userInfo = $('#userInfo');
-    const authButtons = $('#authButtons');
-    const userName = $('#userName');
-    const logoutBtn = $('#logoutBtn');
-    const footer = $('.footer');
-    const avatarLetter = document.getElementById('avatarLetter');
-    const userAvatar = document.getElementById('userAvatar');
+  const avatarLetter = document.getElementById('avatarLetter');
+  const userAvatar = document.getElementById('userAvatar');
 
-    async function updateUIForUser() { // Добавили async
+  async function updateUIForUser() { // Добавили async
       const currentUser = getCurrentUser();
       const landing = document.getElementById('landingPage');
       const about = document.getElementById('aboutPage');
@@ -1736,7 +1720,60 @@ function applyLang(lang) {
           if (userInfo) userInfo.style.display = 'none';
         }
       }
-    }
+  }
+
+  async function renderUI() {
+      try {
+          // 1. Загружаем данные ОДИН раз для всех
+          const userData = await getCurrentUserData();
+          
+          // Если данных нет (пользователь не залогинен), выходим или чистим UI
+          if (!userData) return;
+
+          // 2. Обновляем шапку (передаем данные явно, чтобы updateUIForUser не качал их сам)
+          // Примечание: функцию updateUIForUser чуть ниже тоже поправим
+          await updateUIForUser(); 
+          
+          // 3. Обновляем таблицу задач (теперь она берет данные из кэша)
+          await loadUserTasks();
+
+          // 4. Если есть календарь - обновляем
+          if (document.getElementById('calendarGrid')) {
+              await renderCalendar();
+          }
+
+          // 5. Если открыт быстрый календарь - обновляем
+          if (document.getElementById('quickCalendarGrid')) {
+              await renderQuickCalendarContent();
+          }
+
+          // 6. Если выбрана дата в попапе - обновляем задачи
+          if (typeof selectedDate !== 'undefined' && selectedDate) {
+              await displayTasksForDate(selectedDate);
+          }
+          
+      } catch (e) {
+          console.error("Ошибка в renderUI:", e);
+      }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const savedLang = localStorage.getItem('site_lang') || 'en';
+    applyFullLanguage(savedLang);
+    const header = $('.home-header');
+    const modalLog = $('.modal-overlay-log');
+    const modalStart = $('.modal-overlay-start');
+    const modalReset = $('.reset-password');
+    const btnStart = $('.btn-start');
+    const btnHero = $('.hero-btn');
+    const heroSection = $('.hero-section')
+    const btnLogin = $('.login');
+    const userInfo = $('#userInfo');
+    const authButtons = $('#authButtons');
+    const userName = $('#userName');
+    const logoutBtn = $('#logoutBtn');
+    const footer = $('.footer');
+    
 
     function generateColor(str) {
         let hash = 0;
@@ -1794,41 +1831,6 @@ function applyLang(lang) {
       } catch (e) {
           console.error('Save profile error:', e);
           showNotification('Error saving profile', 'error');
-      }
-    }
-
-    async function renderUI() {
-      try {
-          // 1. Загружаем данные ОДИН раз для всех
-          const userData = await getCurrentUserData();
-          
-          // Если данных нет (пользователь не залогинен), выходим или чистим UI
-          if (!userData) return;
-
-          // 2. Обновляем шапку (передаем данные явно, чтобы updateUIForUser не качал их сам)
-          // Примечание: функцию updateUIForUser чуть ниже тоже поправим
-          await updateUIForUser(); 
-          
-          // 3. Обновляем таблицу задач (теперь она берет данные из кэша)
-          await loadUserTasks();
-
-          // 4. Если есть календарь - обновляем
-          if (document.getElementById('calendarGrid')) {
-              await renderCalendar();
-          }
-
-          // 5. Если открыт быстрый календарь - обновляем
-          if (document.getElementById('quickCalendarGrid')) {
-              await renderQuickCalendarContent();
-          }
-
-          // 6. Если выбрана дата в попапе - обновляем задачи
-          if (typeof selectedDate !== 'undefined' && selectedDate) {
-              await displayTasksForDate(selectedDate);
-          }
-          
-      } catch (e) {
-          console.error("Ошибка в renderUI:", e);
       }
     }
 
